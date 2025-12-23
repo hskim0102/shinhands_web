@@ -147,7 +147,7 @@ export default function App() {
             </div>
             <button
               onClick={reloadFromConfig}
-              className="px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-sm transition-colors border border-slate-600/50 hover:border-slate-500"
+              className="hidden md:block px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-sm transition-colors border border-slate-600/50 hover:border-slate-500"
               title="설정파일에서 데이터 다시 로드"
             >
               설정 리로드

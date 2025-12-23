@@ -231,87 +231,92 @@ export default function App() {
 
       {/* 상세 모달 */}
       {currentMember && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
             onClick={handleCloseModal}
           />
           
-          <div className="relative w-full max-w-4xl bg-[#1e293b] rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col md:flex-row">
+          <div className="relative w-full max-w-sm sm:max-w-md md:max-w-4xl max-h-[95vh] bg-[#1e293b] rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col">
             
             <button 
               onClick={handleCloseModal}
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-20"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-20"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
-            {/* 좌측: 프로필 정보 */}
-            <div className="w-full md:w-2/5 bg-gradient-to-br from-slate-800 to-slate-900 p-8 flex flex-col items-center justify-center border-r border-white/5 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500" />
-              
-              <div className="w-40 h-40 rounded-full border-4 border-slate-700/50 shadow-xl overflow-hidden mb-6 relative">
-                 <img 
-                   src={currentMember.image} 
-                   alt={currentMember.name} 
-                   className="w-full h-full object-cover bg-slate-800" 
-                 />
-              </div>
-
-              <h2 className="text-3xl font-bold text-white mb-2">{currentMember.name}</h2>
-
-              <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-semibold mb-6 border border-blue-500/20">
-                {currentMember.role}
-              </span>
-
-              <div className="w-full space-y-4">
-                 <div className="p-3 bg-white/5 rounded-xl">
-                    <span className="text-slate-400 flex items-center gap-2 mb-2"><Brain size={16}/> MBTI</span>
-                    <span className="font-mono font-bold text-purple-400">{currentMember.mbti}</span>
-                 </div>
-                 <div className="p-3 bg-white/5 rounded-xl">
-                    <span className="text-slate-400 flex items-center gap-2 mb-2"><Hash size={16}/> 키워드</span>
-                    <span className="text-sm text-slate-200">{currentMember.tags}</span>
-                 </div>
-              </div>
-            </div>
-
-            {/* 우측: 상세 스탯 & 소개 */}
-            <div className="w-full md:w-3/5 p-8 bg-[#0f172a]">
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                    <Zap className="text-yellow-400" size={20} />
-                    능력치 분석
-                  </h3>
-                </div>
+            {/* 모바일: 세로 레이아웃, 데스크톱: 가로 레이아웃 */}
+            <div className="flex flex-col md:flex-row overflow-y-auto">
+              {/* 프로필 정보 */}
+              <div className="w-full md:w-2/5 bg-gradient-to-br from-slate-800 to-slate-900 p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500" />
                 
-                <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/5">
-                  <div className="flex justify-center mb-6">
-                    <HexChart 
-                      stats={currentMember.stats} 
-                      labels={STAT_LABELS} 
-                      color="#8b5cf6"
-                    />
+                <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-slate-700/50 shadow-xl overflow-hidden mb-4 sm:mb-6 relative">
+                   <img 
+                     src={currentMember.image} 
+                     alt={currentMember.name} 
+                     className="w-full h-full object-cover bg-slate-800" 
+                   />
+                </div>
+
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 text-center">{currentMember.name}</h2>
+
+                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs sm:text-sm font-semibold mb-4 sm:mb-6 border border-blue-500/20">
+                  {currentMember.role}
+                </span>
+
+                <div className="w-full space-y-3 sm:space-y-4">
+                   <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
+                      <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Brain size={14}/> MBTI</span>
+                      <span className="font-mono font-bold text-purple-400 text-sm sm:text-base">{currentMember.mbti}</span>
+                   </div>
+                   <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
+                      <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Hash size={14}/> 키워드</span>
+                      <span className="text-xs sm:text-sm text-slate-200">{currentMember.tags}</span>
+                   </div>
+                </div>
+              </div>
+
+              {/* 상세 스탯 & 소개 */}
+              <div className="w-full md:w-3/5 p-4 sm:p-6 md:p-8 bg-[#0f172a]">
+                <div className="mb-6 sm:mb-8">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-200 flex items-center gap-2">
+                      <Zap className="text-yellow-400" size={18} />
+                      능력치 분석
+                    </h3>
+                  </div>
+                  
+                  <div className="bg-slate-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/5">
+                    <div className="flex justify-center mb-4 sm:mb-6">
+                      <div className="scale-75 sm:scale-90 md:scale-100">
+                        <HexChart 
+                          stats={currentMember.stats} 
+                          labels={STAT_LABELS} 
+                          color="#8b5cf6"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <h3 className="text-lg font-semibold text-slate-200 mb-3 flex items-center gap-2">
-                  <MessageCircle className="text-green-400" size={20} />
-                  한줄 소개
-                </h3>
-                <p className="text-slate-300 leading-relaxed bg-slate-800/30 p-4 rounded-xl border border-white/5 italic">
-                  "{currentMember.description}"
-                </p>
-              </div>
-              
-              <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center text-sm text-slate-500">
-                <span>Employee ID: #{currentMember.id.toString().padStart(3, '0')}</span>
-                <span className="flex items-center gap-1">
-                  Team Awesome <Sparkles size={12} />
-                </span>
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-200 mb-2 sm:mb-3 flex items-center gap-2">
+                    <MessageCircle className="text-green-400" size={18} />
+                    한줄 소개
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed bg-slate-800/30 p-3 sm:p-4 rounded-xl border border-white/5 italic">
+                    "{currentMember.description}"
+                  </p>
+                </div>
+                
+                <div className="pt-4 sm:pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs sm:text-sm text-slate-500">
+                  <span>Employee ID: #{currentMember.id.toString().padStart(3, '0')}</span>
+                  <span className="flex items-center gap-1">
+                    Team Awesome <Sparkles size={12} />
+                  </span>
+                </div>
               </div>
             </div>
           </div>

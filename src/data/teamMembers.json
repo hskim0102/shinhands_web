@@ -1,0 +1,366 @@
+[
+  {
+    "id": 1,
+    "name": "김진성",
+    "role": "팀장",
+    "mbti": "ENFP",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Kim&backgroundColor=b6e3f4",
+    "description": "누구 밥 사줄까?.",
+    "tags": "#큰형님,#소확행",    
+    "stats": [90, 80, 80, 95, 75, 95]
+  },
+  {
+    "id": 2,
+    "name": "김윤성",
+    "role": "PM",
+    "mbti": "ISTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka3&backgroundColor=b6e3f4",
+    "description": "New ITSM 구축.",
+    "tags": "#PM",
+    "stats": [70, 88, 70, 92, 75, 85]
+  },
+  {
+    "id": 3,
+    "name": "박서진",
+    "role": "프로(책임)",
+    "mbti": "INTP",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Zack&backgroundColor=b6e3f4",
+    "description": "업무와 삶의 균형을 추구합니다.",
+    "tags": "#부자",
+    "stats": [80, 65, 98, 88, 78, 80]
+  },
+  {
+    "id": 4,
+    "name": "이원재",
+    "role": "프로(책임)",
+    "mbti": "ESFJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&backgroundColor=b6e3f4",
+    "description": "술이 좋다.",
+    "tags": "#베트남 맨",
+    "stats": [95, 80, 70, 95, 82, 90]
+  },
+  {
+    "id": 5,
+    "name": "정상민",
+    "role": "PM",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=James&backgroundColor=b6e3f4",
+    "description": "안되는건 없다.",
+    "tags": "#하하하",
+    "stats": [85, 80, 90, 88, 90, 85]
+  },
+  {
+    "id": 6,
+    "name": "정우진",
+    "role": "프로(책임)",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=James2&backgroundColor=b6e3f4",
+    "description": "형이 해결해줄께.",
+    "tags": "#착한사람",
+    "stats": [80, 80, 70, 88, 88, 95]
+  },
+  {
+      "id": 7,
+      "name": "정호열",
+      "role": "프로(책임)",
+      "mbti": "ISTJ",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=James3&backgroundColor=b6e3f4",
+      "description": "좋은게 좋은거임.",
+      "tags": "#한국은행",
+      "stats": [
+        89,
+        58,
+        94,
+        54,
+        41,
+        55
+      ]
+    },
+  {
+      "id": 8,
+      "name": "조정량",
+      "role": "PM(책임)",
+      "mbti": "INTP",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Liam&backgroundColor=b6e3f4",
+      "description": "살아남는자가 강한 자다",
+      "tags": "#승리자",
+      "stats": [
+        58,
+        69,
+        67,
+        88,
+        13,
+        78
+      ]
+    },
+  {
+      "id": 9,
+      "name": "황대영",
+      "role": "PL",
+      "mbti": "ESFJ",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4",
+      "description": "화이팅",
+      "tags": "#불만러",
+      "stats": [
+        82,
+        79,
+        52,
+        91,
+        51,
+        42
+      ]
+    },
+  {
+      "id": 10,
+      "name": "김지영",
+      "role": "프로(책임)",
+      "mbti": "ENTJ",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka&backgroundColor=b6e3f4",
+      "description": "신한DS 걷기왕 입니다.",
+      "tags": "#걷기왕",
+      "stats": [
+        48,
+        66,
+        70,
+        80,
+        65,
+        79
+      ]
+    },
+  {
+      "id": 11,
+      "name": "배준곤",
+      "role": "부서장대우",
+      "mbti": "ENFP",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Zack&backgroundColor=b6e3f4",
+      "description": "새마을금고 프로젝트.",
+      "tags": "#부서장대우",
+      "stats": [
+        89,
+        97,
+        60,
+        69,
+        78,
+        74
+      ]
+    },
+  {
+      "id": 12,
+      "name": "김영환",
+      "role": "프로(수석)",
+      "mbti": "ISTJ",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&backgroundColor=b6e3f4",
+      "description": "저녁엔 술이지.",
+      "tags": "#넷플릭스중독",
+      "stats": [
+        77,
+        87,
+        49,
+        64,
+        77,
+        90
+      ]
+    },
+  {
+    "id": 13,
+    "name": "김호섭",
+    "role": "프로(수석)",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=James&backgroundColor=b6e3f4",
+    "description": "응징보복, 걸리면 죽는다.",
+    "tags": "#짬처리 전문, #쌈닭",
+    "stats": [75, 90, 82, 88, 78, 95]
+  },
+  {
+      "id": 14,
+      "name": "박상환",
+      "role": "프로(수석)",
+      "mbti": "ESFJ",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Mimi&backgroundColor=b6e3f4",
+      "description": "백년관 7층 근무.",
+      "tags": "#헬창",
+      "stats": [
+        85,
+        84,
+        99,
+        63,
+        47,
+        43
+      ]
+    },
+  {
+    "id": 15,
+    "name": "이길호",
+    "role": "프로(수석)",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=James&backgroundColor=b6e3f4",
+    "description": "대직자는 조정량프로 입니다.",
+    "tags": "#빠르게",
+    "stats": [75, 90, 82, 88, 78, 95]
+  },
+  {
+      "id": 16,
+      "name": "이민호",
+      "role": "한국은행 공통 PL",
+      "mbti": "ENFP",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Liam&backgroundColor=b6e3f4",
+      "description": "분위기 메이커",
+      "tags": "#얼리어탭터",
+      "stats": [
+        96,
+        59,
+        17,
+        91,
+        52,
+        91
+      ]
+    },
+  {
+    "id": 17,
+    "name": "이영철",
+    "role": "프로(수석)",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4",
+      "description": "모든 일은 다 한다.",
+      "tags": "#갈매청년",
+      "stats": [
+        75,
+        84,
+        69,
+        96,
+        75,
+        96
+      ]
+  },
+  {
+    "id": 18,
+    "name": "이지현",
+    "role": "한국은행 특화 핵심",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka&backgroundColor=b6e3f4",
+    "description": "멀리는 안간다.",
+    "tags": "#고양이 집사",
+    "stats": [75, 90, 82, 88, 78, 95]
+  },
+  {
+      "id": 19,
+      "name": "이호원",
+      "role": "투블럭",
+      "mbti": "ESFJ",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Zack&backgroundColor=b6e3f4",
+      "description": "히틀러, 제5원소",
+      "tags": "#고양이집사",
+      "stats": [
+        54,
+        65,
+        94,
+        79,
+        55,
+        78
+      ]
+    },
+  {
+      "id": 20,
+      "name": "장호영",
+      "role": "개발맨",
+      "mbti": "ENTJ",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&backgroundColor=b6e3f4",
+      "description": "집 밖은 위험해",
+      "tags": "#집돌이",
+      "stats": [
+        87,
+        86,
+        74,
+        94,
+        49,
+        92
+      ]
+    },
+  {
+    "id": 21,
+    "name": "정병우",
+    "role": "프로(수석)",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=James2&backgroundColor=b6e3f4",
+    "description": "시켜만 주십시오.",
+    "tags": "#AI 맨",
+    "stats": [75, 90, 82, 88, 78, 95]
+  },
+  {
+    "id": 22,
+    "name": "조진우",
+    "role": "프로(수석)",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=James6&backgroundColor=b6e3f4",
+    "description": "사람이 필요 합니다.",
+    "tags": "#맛집탐험대",
+    "stats": [75, 90, 82, 88, 78, 95]
+  },
+  {
+    "id": 23,
+    "name": "한재인",
+    "role": "프로(수석)",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=James&backgroundColor=b6e3f4",
+    "description": "화이팅.",
+    "tags": "#진자한 사람",
+    "stats": [75, 90, 82, 88, 78, 95]
+  },
+  {
+    "id": 24,
+    "name": "강지형",
+    "role": "프로(선임)",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix9&backgroundColor=b6e3f4",
+    "description": "한국은행에 있습니다.",
+    "tags": "#GPT사용자",
+    "stats": [75, 90, 82, 88, 78, 95]
+  },
+  {
+    "id": 25,
+    "name": "김가은",
+    "role": "프로(선임)",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix2&backgroundColor=b6e3f4",
+    "description": "점심 메뉴 고르는 것에 진심인 편.",    
+    "tags": "#맛집탐험대",
+    "stats": [75, 90, 82, 88, 78, 95]
+  },
+  {
+      "id": 26,
+      "name": "이수지",
+      "role": "뭐든 열심히",
+      "mbti": "ENFP",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix6&backgroundColor=b6e3f4",
+      "description": "뭐든지 맡겨주세요.",
+      "tags": "#솔져",
+      "stats": [
+        73,
+        85,
+        56,
+        61,
+        92,
+        94
+      ]
+    },
+  {
+    "id": 27,
+    "name": "안보라미",
+    "role": "Marketer",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix1&backgroundColor=b6e3f4",
+    "description": "점심 메뉴 고르는 것에 진심인 편.",
+    "tags": "#맛집탐험대",
+    "stats": [75, 90, 82, 88, 78, 95]
+  },
+  {
+    "id": 28,
+    "name": "TBD",
+    "role": "TBD",
+    "mbti": "ENTJ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=James9&backgroundColor=b6e3f4",
+    "description": "채워주세요.",
+    "tags": "#뽑아만 주세요.",
+    "stats": [50, 50, 50, 50, 50, 50]
+  }
+]

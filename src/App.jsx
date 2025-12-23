@@ -1,50 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Search, X, Zap, Coffee, MessageCircle, Brain, Moon, Sun, Sparkles, Hash, Edit2, Save } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash } from 'lucide-react';
+import { getTeamConfig, getInitialTeamData } from './utils/configLoader';
 
-// --- 유틸리티 및 데이터 생성 (실제 사용 시 API나 DB로 교체 가능) ---
-
-// 재미있는 능력치 항목들
-const STAT_LABELS = [
-  "드립력",   // Humor
-  "커피수혈", // Coffee dependency
-  "칼퇴본능", // Desire to leave on time
-  "멘탈갑",   // Mental strength
-  "알콜해독", // Alcohol tolerance
-  "업무센스"  // Work sense
-];
-
-// 랜덤 데이터 생성기 (27명의 팀원 시뮬레이션)
-const generateTeamData = () => {
-  const roles = ["Frontend Dev", "Backend Dev", "Designer", "PM", "Marketer", "Data Analyst"];
-  const images = [
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Zack",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=James",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Mimi",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Robert",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Liam"
-  ];
-
-  return Array.from({ length: 28 }, (_, i) => ({
-    id: i + 1,
-    name: `팀원 ${i + 1}`,
-    role: roles[i % roles.length],
-    mbti: ["ENFP", "ISTJ", "INTP", "ESFJ", "ENTJ"][i % 5],
-    image: images[i % images.length] + `&backgroundColor=b6e3f4`,
-    description: i % 3 === 0 ? "코딩하다가 딴짓하는 게 취미입니다." : "점심 메뉴 고르는 것에 진심인 편.",
-    tags: ["#맛집탐험대", "#헬창", "#고양이집사", "#넷플릭스중독"][i % 4],
-    stats: [
-      Math.floor(Math.random() * 60) + 40, // 40~100 사이 랜덤
-      Math.floor(Math.random() * 60) + 40,
-      Math.floor(Math.random() * 60) + 40,
-      Math.floor(Math.random() * 60) + 40,
-      Math.floor(Math.random() * 60) + 40,
-      Math.floor(Math.random() * 60) + 40,
-    ]
-  }));
-};
+// 설정파일에서 데이터 로드
+const teamConfig = getTeamConfig();
+const STAT_LABELS = teamConfig.statLabels;
 
 // 로컬 스토리지 키
 const STORAGE_KEY = 'groupsiteam-team-data';
@@ -112,23 +72,28 @@ const HexChart = ({ stats, labels, color = "#8b5cf6" }) => {
 
 // --- 메인 애플리케이션 ---
 export default function App() {
-  // 로컬 스토리지에서 데이터 로드 또는 초기 데이터 생성
+  // 설정파일에서 초기 데이터 로드 또는 로컬 스토리지에서 복원
   const [teamData, setTeamData] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch {
-        return generateTeamData();
+        return getInitialTeamData();
       }
     }
-    return generateTeamData();
+    return getInitialTeamData();
   });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingData, setEditingData] = useState(null);
+
+  // 설정파일에서 데이터 다시 로드하는 함수
+  const reloadFromConfig = () => {
+    const freshData = getInitialTeamData();
+    setTeamData(freshData);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(freshData));
+  };
 
   // 데이터 변경 시 로컬 스토리지에 저장
   useEffect(() => {
@@ -144,82 +109,20 @@ export default function App() {
     );
   }, [searchTerm, teamData]);
 
-  // 멤버 정보 업데이트 함수
-  const updateMember = (memberId, updatedData) => {
-    setTeamData(prevData =>
-      prevData.map(member =>
-        member.id === memberId
-          ? { ...member, ...updatedData }
-          : member
-      )
-    );
-  };
-
   // 모달에서 표시할 최신 멤버 데이터
   const currentMember = useMemo(() => {
     if (!selectedMember) return null;
     return teamData.find(m => m.id === selectedMember.id) || selectedMember;
   }, [selectedMember, teamData]);
 
-  // 모달 열기 시 편집 상태 초기화
+  // 모달 열기
   const handleOpenModal = (member) => {
     setSelectedMember(member);
-    setIsEditing(false);
-    setEditingData(null);
   };
 
   // 모달 닫기
   const handleCloseModal = () => {
     setSelectedMember(null);
-    setIsEditing(false);
-    setEditingData(null);
-  };
-
-  // 편집 모드 시작
-  const handleStartEdit = () => {
-    if (currentMember) {
-      setIsEditing(true);
-      setEditingData({
-        name: currentMember.name,
-        role: currentMember.role,
-        mbti: currentMember.mbti,
-        tags: currentMember.tags,
-        description: currentMember.description,
-        image: currentMember.image,
-        stats: [...currentMember.stats]
-      });
-    }
-  };
-
-  // 편집 저장
-  const handleSaveEdit = () => {
-    if (currentMember && editingData) {
-      updateMember(currentMember.id, editingData);
-      setIsEditing(false);
-      setEditingData(null);
-    }
-  };
-
-  // 편집 취소
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditingData(null);
-  };
-
-  // 필드 값 변경
-  const handleFieldChange = (field, value) => {
-    if (editingData) {
-      setEditingData({ ...editingData, [field]: value });
-    }
-  };
-
-  // 능력치 값 변경
-  const handleStatChange = (index, value) => {
-    if (editingData) {
-      const newStats = [...editingData.stats];
-      newStats[index] = Math.max(0, Math.min(100, parseInt(value) || 0));
-      setEditingData({ ...editingData, stats: newStats });
-    }
   };
 
   return (
@@ -233,13 +136,22 @@ export default function App() {
       {/* 헤더 */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-[#0f172a]/80 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="bg-gradient-to-tr from-purple-500 to-blue-500 p-2 rounded-lg">
-              <Sparkles size={24} className="text-white" />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="bg-gradient-to-tr from-purple-500 to-blue-500 p-2 rounded-lg">
+                <Sparkles size={24} className="text-white" />
+              </div>
+              <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+                {teamConfig.teamInfo.name}
+              </h1>
             </div>
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
-              그룹SI팀 Awesome
-            </h1>
+            <button
+              onClick={reloadFromConfig}
+              className="px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-sm transition-colors border border-slate-600/50 hover:border-slate-500"
+              title="설정파일에서 데이터 다시 로드"
+            >
+              설정 리로드
+            </button>
           </div>
           
           <div className="relative w-full md:w-96">
@@ -261,10 +173,10 @@ export default function App() {
         {/* 인트로 텍스트 */}
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
-            우리는 <span className="text-purple-400">27명</span>의<br className="md:hidden" /> 전사들 입니다.
+            {teamConfig.teamInfo.description}
           </h2>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            서로의 능력치를 확인하고 더 가까워지세요! 카드를 클릭하면 상세 스탯을 볼 수 있습니다.
+            {teamConfig.teamInfo.subtitle}
           </p>
         </div>
 
@@ -340,77 +252,27 @@ export default function App() {
               
               <div className="w-40 h-40 rounded-full border-4 border-slate-700/50 shadow-xl overflow-hidden mb-6 relative">
                  <img 
-                   src={isEditing && editingData ? editingData.image : currentMember.image} 
-                   alt={isEditing && editingData ? editingData.name : currentMember.name} 
+                   src={currentMember.image} 
+                   alt={currentMember.name} 
                    className="w-full h-full object-cover bg-slate-800" 
                  />
               </div>
 
-              {isEditing && editingData ? (
-                <input
-                  type="text"
-                  value={editingData.name}
-                  onChange={(e) => handleFieldChange('name', e.target.value)}
-                  className="text-3xl font-bold text-white mb-2 bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-center w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              ) : (
-                <h2 className="text-3xl font-bold text-white mb-2">{currentMember.name}</h2>
-              )}
+              <h2 className="text-3xl font-bold text-white mb-2">{currentMember.name}</h2>
 
-              {isEditing && editingData ? (
-                <input
-                  type="text"
-                  value={editingData.role}
-                  onChange={(e) => handleFieldChange('role', e.target.value)}
-                  className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-semibold mb-6 border border-blue-500/20 w-full text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              ) : (
-                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-semibold mb-6 border border-blue-500/20">
-                  {currentMember.role}
-                </span>
-              )}
+              <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-semibold mb-6 border border-blue-500/20">
+                {currentMember.role}
+              </span>
 
               <div className="w-full space-y-4">
                  <div className="p-3 bg-white/5 rounded-xl">
                     <span className="text-slate-400 flex items-center gap-2 mb-2"><Brain size={16}/> MBTI</span>
-                    {isEditing && editingData ? (
-                      <input
-                        type="text"
-                        value={editingData.mbti}
-                        onChange={(e) => handleFieldChange('mbti', e.target.value.toUpperCase())}
-                        maxLength={4}
-                        className="w-full font-mono font-bold text-purple-400 bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      />
-                    ) : (
-                      <span className="font-mono font-bold text-purple-400">{currentMember.mbti}</span>
-                    )}
+                    <span className="font-mono font-bold text-purple-400">{currentMember.mbti}</span>
                  </div>
                  <div className="p-3 bg-white/5 rounded-xl">
                     <span className="text-slate-400 flex items-center gap-2 mb-2"><Hash size={16}/> 키워드</span>
-                    {isEditing && editingData ? (
-                      <input
-                        type="text"
-                        value={editingData.tags}
-                        onChange={(e) => handleFieldChange('tags', e.target.value)}
-                        className="w-full text-sm text-slate-200 bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="#태그입력"
-                      />
-                    ) : (
-                      <span className="text-sm text-slate-200">{currentMember.tags}</span>
-                    )}
+                    <span className="text-sm text-slate-200">{currentMember.tags}</span>
                  </div>
-                 {isEditing && editingData && (
-                   <div className="p-3 bg-white/5 rounded-xl">
-                     <span className="text-slate-400 flex items-center gap-2 mb-2">사진 URL</span>
-                     <input
-                       type="text"
-                       value={editingData.image}
-                       onChange={(e) => handleFieldChange('image', e.target.value)}
-                       className="w-full text-xs text-slate-200 bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                       placeholder="이미지 URL 입력"
-                     />
-                   </div>
-                 )}
               </div>
             </div>
 
@@ -422,77 +284,16 @@ export default function App() {
                     <Zap className="text-yellow-400" size={20} />
                     능력치 분석
                   </h3>
-                  {!isEditing ? (
-                    <button
-                      onClick={handleStartEdit}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg text-sm transition-colors border border-purple-500/30"
-                    >
-                      <Edit2 size={16} />
-                      편집
-                    </button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSaveEdit}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg text-sm transition-colors border border-green-500/30"
-                      >
-                        <Save size={16} />
-                        저장
-                      </button>
-                      <button
-                        onClick={handleCancelEdit}
-                        className="px-3 py-1.5 bg-slate-600/20 hover:bg-slate-600/30 text-slate-300 rounded-lg text-sm transition-colors border border-slate-500/30"
-                      >
-                        취소
-                      </button>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/5">
                   <div className="flex justify-center mb-6">
                     <HexChart 
-                      stats={isEditing && editingData ? editingData.stats : currentMember.stats} 
+                      stats={currentMember.stats} 
                       labels={STAT_LABELS} 
                       color="#8b5cf6"
                     />
                   </div>
-                  
-                  {/* 능력치 편집 UI */}
-                  {isEditing && editingData && (
-                    <div className="mt-6 space-y-4">
-                      {STAT_LABELS.map((label, index) => (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium text-slate-300">
-                              {label}
-                            </label>
-                            <span className="text-sm font-bold text-purple-400 w-12 text-right">
-                              {editingData.stats[index]}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="range"
-                              min="0"
-                              max="100"
-                              value={editingData.stats[index]}
-                              onChange={(e) => handleStatChange(index, e.target.value)}
-                              className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                            />
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={editingData.stats[index]}
-                              onChange={(e) => handleStatChange(index, e.target.value)}
-                              className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm text-white text-center focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -501,19 +302,9 @@ export default function App() {
                   <MessageCircle className="text-green-400" size={20} />
                   한줄 소개
                 </h3>
-                {isEditing && editingData ? (
-                  <textarea
-                    value={editingData.description}
-                    onChange={(e) => handleFieldChange('description', e.target.value)}
-                    rows={3}
-                    className="w-full text-slate-300 leading-relaxed bg-slate-800/30 p-4 rounded-xl border border-white/5 italic focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-                    placeholder="한줄 소개를 입력하세요..."
-                  />
-                ) : (
-                  <p className="text-slate-300 leading-relaxed bg-slate-800/30 p-4 rounded-xl border border-white/5 italic">
-                    "{currentMember.description}"
-                  </p>
-                )}
+                <p className="text-slate-300 leading-relaxed bg-slate-800/30 p-4 rounded-xl border border-white/5 italic">
+                  "{currentMember.description}"
+                </p>
               </div>
               
               <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center text-sm text-slate-500">

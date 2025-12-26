@@ -13,7 +13,8 @@ const HexChart = ({ stats, labels, color = "#8b5cf6" }) => {
   const center = size / 2;
   const radius = (size / 2) - 30; // 텍스트 공간 확보
   const maxStat = 100;
-
+ 
+  
   // 각도 계산 함수
   const getPoint = (value, index, total) => {
     const angle = (Math.PI * 2 * index) / total - Math.PI / 2;

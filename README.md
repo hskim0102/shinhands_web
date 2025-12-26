@@ -1,15 +1,64 @@
 # 그룹SI팀 Awesome - 팀원 소개 앱
 
-React + Vite로 구축된 팀원 소개 및 능력치 시각화 애플리케이션입니다.
-
+React + Vite + PostgreSQL로 구축된 팀원 소개, 능력치 시각화 및 게시판 애플리케이션입니다.
 
 ## 주요 기능
 
+### 팀원 관리
 - 팀원 프로필 카드 뷰
 - 육각형 레이더 차트로 능력치 시각화
 - 실시간 검색 및 필터링
 - 팀원 정보 편집 기능
-- 설정파일 기반 데이터 관리
+
+### 게시판
+- 카테고리별 게시글 관리
+- 게시글 작성, 수정, 삭제
+- 조회수 추적
+- 반응형 디자인
+
+### 데이터베이스 연동
+- PostgreSQL 데이터베이스 연동
+- 실시간 데이터 동기화
+- 트랜잭션 기반 안전한 데이터 처리
+
+## 데이터베이스 설정
+
+### 1. 환경 변수 설정
+`.env` 파일을 생성하고 데이터베이스 연결 정보를 설정하세요:
+
+```bash
+# Database Configuration
+DATABASE_URL=your_postgresql_connection_string
+VITE_DATABASE_URL=your_postgresql_connection_string
+```
+
+### 2. 데이터베이스 스키마 생성
+```bash
+# PostgreSQL에 연결
+psql $DATABASE_URL
+
+# 스키마 및 초기 데이터 생성
+\i database/schema.sql
+\i database/seed.sql
+```
+
+### 3. 연결 테스트
+```bash
+node database/test-connection.js
+```
+
+## 개발 환경 설정
+
+```bash
+# 의존성 설치
+npm install
+
+# 개발 서버 실행
+npm run dev
+
+# 빌드
+npm run build
+```
 
 ## 설정파일 구조
 
@@ -21,51 +70,45 @@ React + Vite로 구축된 팀원 소개 및 능력치 시각화 애플리케이�
     "description": "팀 설명",
     "subtitle": "부제목"
   },
-  "statLabels": ["능력치1", "능력치2", ...],
-  "roles": ["역할1", "역할2", ...],
-  "mbtiTypes": ["MBTI 타입들"],
-  "defaultTags": ["기본 태그들"],
-  "avatarSeeds": ["아바타 시드들"],
-  "defaultDescriptions": ["기본 설명들"]
+  "statLabels": ["리더십", "소통력", "기술력", "창의력", "신뢰도", "열정"]
 }
 ```
 
-### 팀원 데이터 (`src/data/teamMembers.json`)
-```json
-[
-  {
-    "id": 1,
-    "name": "이름",
-    "role": "역할",
-    "mbti": "MBTI",
-    "image": "이미지 URL",
-    "description": "소개",
-    "tags": "태그",
-    "stats": [능력치1, 능력치2, ...]
-  }
-]
-```
+## 데이터베이스 구조
+
+### 주요 테이블
+- `team_members` - 팀 멤버 기본 정보
+- `member_stats` - 팀 멤버별 능력치
+- `stat_categories` - 능력치 카테고리
+- `posts` - 게시글
+- `board_categories` - 게시판 카테고리
+
+자세한 데이터베이스 구조는 `database/README.md`를 참조하세요.
 
 ## 사용법
 
-1. 설정파일 수정 후 "설정 리로드" 버튼 클릭
-2. 팀원 카드 클릭으로 상세 정보 확인
-3. 편집 버튼으로 팀원 정보 수정 가능
+1. 데이터베이스 설정 완료 후 애플리케이션 실행
+2. 팀 멤버 탭에서 팀원 정보 확인
+3. 게시판 탭에서 팀 소통
 4. 검색창으로 이름, 역할, MBTI 검색
-
-## 개발 환경 설정
-
-```bash
-npm install
-npm run dev
-```
+5. "설정 리로드" 버튼으로 데이터 새로고침
 
 ## 기술 스택
 
-- React 18
-- Vite
-- Tailwind CSS
-- Lucide React Icons
+- **Frontend**: React 18, Vite, Tailwind CSS
+- **Database**: PostgreSQL, Neon Serverless
+- **Icons**: Lucide React
+- **State Management**: React Hooks
+
+## 보안 고려사항
+
+- 환경 변수를 통한 데이터베이스 연결 정보 관리
+- SQL 인젝션 방지를 위한 파라미터화된 쿼리 사용
+- 클라이언트 사이드 데이터베이스 연결 (개발용, 프로덕션에서는 백엔드 API 권장)
+
+## 배포
+
+프로덕션 환경에서는 보안을 위해 백엔드 API 서버를 통해 데이터베이스에 접근하는 것을 권장합니다.
 
 ---
 

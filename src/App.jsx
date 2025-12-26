@@ -1,13 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash } from 'lucide-react';
-import { getTeamConfig, getInitialTeamData } from './utils/configLoader';
+import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle } from 'lucide-react';
+import { getTeamConfig } from './utils/configLoader';
+import { teamMemberAPI, boardAPI, statsAPI } from './services/api';
 
 // 설정파일에서 데이터 로드
 const teamConfig = getTeamConfig();
 const STAT_LABELS = teamConfig.statLabels;
-
-// 로컬 스토리지 키
-const STORAGE_KEY = 'groupsiteam-team-data';
 
 // --- 컴포넌트: 육각형 레이더 차트 (SVG) ---
 const HexChart = ({ stats, labels, color = "#8b5cf6" }) => {
@@ -72,33 +70,65 @@ const HexChart = ({ stats, labels, color = "#8b5cf6" }) => {
 
 // --- 메인 애플리케이션 ---
 export default function App() {
-  // 설정파일에서 초기 데이터 로드 또는 로컬 스토리지에서 복원
-  const [teamData, setTeamData] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return getInitialTeamData();
-      }
-    }
-    return getInitialTeamData();
-  });
-
+  // 상태 관리
+  const [teamData, setTeamData] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [statCategories, setStatCategories] = useState([]);
+  const [boardCategories, setBoardCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
+  const [currentView, setCurrentView] = useState("team"); // "team" | "board"
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [showNewPostForm, setShowNewPostForm] = useState(false);
+  const [isEditingMember, setIsEditingMember] = useState(false);
+  const [editingMemberData, setEditingMemberData] = useState(null);
 
-  // 설정파일에서 데이터 다시 로드하는 함수
-  const reloadFromConfig = () => {
-    const freshData = getInitialTeamData();
-    setTeamData(freshData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(freshData));
+  // 데이터 로드
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // 병렬로 데이터 로드
+      const [teamMembers, boardPosts, statCats, boardCats] = await Promise.all([
+        teamMemberAPI.getAll(),
+        boardAPI.getAllPosts(),
+        statsAPI.getCategories(),
+        boardAPI.getCategories()
+      ]);
+      
+      setTeamData(teamMembers);
+      setPosts(boardPosts);
+      setStatCategories(statCats);
+      setBoardCategories(boardCats);
+    } catch (err) {
+      console.error('데이터 로드 실패:', err);
+      setError('데이터를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // 데이터 변경 시 로컬 스토리지에 저장
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(teamData));
-  }, [teamData]);
+  // 새 게시글 추가
+  const addNewPost = async (postData) => {
+    try {
+      const newPostId = await boardAPI.createPost(postData);
+      // 게시글 목록 새로고침
+      const updatedPosts = await boardAPI.getAllPosts();
+      setPosts(updatedPosts);
+      setShowNewPostForm(false);
+    } catch (error) {
+      console.error('게시글 작성 실패:', error);
+      alert('게시글 작성에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
 
   // 검색 필터링
   const filteredMembers = useMemo(() => {
@@ -118,11 +148,65 @@ export default function App() {
   // 모달 열기
   const handleOpenModal = (member) => {
     setSelectedMember(member);
+    setIsEditingMember(false);
+    setEditingMemberData(null);
   };
 
   // 모달 닫기
   const handleCloseModal = () => {
     setSelectedMember(null);
+    setIsEditingMember(false);
+    setEditingMemberData(null);
+  };
+
+  // 편집 모드 시작
+  const handleStartEdit = () => {
+    setIsEditingMember(true);
+    setEditingMemberData({
+      ...currentMember,
+      stats: [...currentMember.stats] // 배열 복사
+    });
+  };
+
+  // 편집 취소
+  const handleCancelEdit = () => {
+    setIsEditingMember(false);
+    setEditingMemberData(null);
+  };
+
+  // 능력치 값 변경
+  const handleStatChange = (index, value) => {
+    const numValue = Math.max(0, Math.min(100, parseInt(value) || 0));
+    setEditingMemberData(prev => ({
+      ...prev,
+      stats: prev.stats.map((stat, i) => i === index ? numValue : stat)
+    }));
+  };
+
+  // 편집 저장
+  const handleSaveEdit = async () => {
+    try {
+      setLoading(true);
+      await teamMemberAPI.update(editingMemberData.id, editingMemberData);
+      
+      // 팀 데이터 새로고침
+      const updatedTeamData = await teamMemberAPI.getAll();
+      setTeamData(updatedTeamData);
+      
+      // 현재 선택된 멤버 업데이트
+      const updatedMember = updatedTeamData.find(m => m.id === editingMemberData.id);
+      setSelectedMember(updatedMember);
+      
+      setIsEditingMember(false);
+      setEditingMemberData(null);
+      
+      alert('능력치가 성공적으로 업데이트되었습니다!');
+    } catch (error) {
+      console.error('능력치 업데이트 실패:', error);
+      alert('능력치 업데이트에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -133,61 +217,116 @@ export default function App() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[100px]"></div>
       </div>
 
+      {/* 로딩 상태 */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/80 backdrop-blur-sm">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+            <p className="text-slate-300">데이터를 불러오는 중...</p>
+          </div>
+        </div>
+      )}
+
+      {/* 에러 상태 */}
+      {error && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/80 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-xl p-6 max-w-md mx-4 border border-red-500/20">
+            <div className="text-center">
+              <div className="text-red-400 mb-4">⚠️</div>
+              <h3 className="text-lg font-semibold text-white mb-2">오류 발생</h3>
+              <p className="text-slate-300 mb-4">{error}</p>
+              <button
+                onClick={loadData}
+                className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
+              >
+                다시 시도
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 헤더 */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-[#0f172a]/80 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-tr from-purple-500 to-blue-500 p-2 rounded-lg">
-                <Sparkles size={24} className="text-white" />
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          {/* 상단 로우: 로고, 설정 버튼, 검색 */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="bg-gradient-to-tr from-purple-500 to-blue-500 p-2 rounded-lg">
+                  <Sparkles size={24} className="text-white" />
+                </div>
+                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+                  {teamConfig.teamInfo.name}
+                </h1>
               </div>
-              <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
-                {teamConfig.teamInfo.name}
-              </h1>
             </div>
-            <button
-              onClick={reloadFromConfig}
-              className="hidden md:block px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-sm transition-colors border border-slate-600/50 hover:border-slate-500"
-              title="설정파일에서 데이터 다시 로드"
-            >
-              설정 리로드
-            </button>
+            
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="text"
+                placeholder="이름, 역할, MBTI로 검색해보세요..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-800/50 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all placeholder:text-slate-500"
+              />
+            </div>
           </div>
-          
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              placeholder="이름, 역할, MBTI로 검색해보세요..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-800/50 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all placeholder:text-slate-500"
-            />
-          </div>
+
+          {/* 네비게이션 메뉴 */}
+          <nav className="flex justify-center">
+            <div className="flex bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-2 border-2 border-slate-700 shadow-2xl">
+              <button
+                onClick={() => setCurrentView("team")}
+                className={`flex items-center gap-3 px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 ${
+                  currentView === "team"
+                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-xl shadow-purple-500/25 border-2 border-purple-400 transform scale-105"
+                    : "text-white hover:text-purple-200 hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-600 border-2 border-transparent hover:border-slate-500 hover:shadow-lg"
+                }`}
+              >
+                <Users size={20} className={currentView === "team" ? "text-white" : "text-purple-300"} />
+                <span className="tracking-wide">팀 멤버</span>
+              </button>
+              <button
+                onClick={() => setCurrentView("board")}
+                className={`flex items-center gap-3 px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 ${
+                  currentView === "board"
+                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-xl shadow-purple-500/25 border-2 border-purple-400 transform scale-105"
+                    : "text-white hover:text-purple-200 hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-600 border-2 border-transparent hover:border-slate-500 hover:shadow-lg"
+                }`}
+              >
+                <FileText size={20} className={currentView === "board" ? "text-white" : "text-purple-300"} />
+                <span className="tracking-wide">게시판</span>
+              </button>
+            </div>
+          </nav>
         </div>
       </header>
 
       {/* 메인 컨텐츠 */}
       <main className="max-w-7xl mx-auto px-6 py-10">
         
-        {/* 인트로 텍스트 */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
-            {teamConfig.teamInfo.description}
-          </h2>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            {teamConfig.teamInfo.subtitle}
-          </p>
-        </div>
+        {currentView === "team" ? (
+          <>
+            {/* 인트로 텍스트 */}
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
+                {teamConfig.teamInfo.description}
+              </h2>
+              <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+                {teamConfig.teamInfo.subtitle}
+              </p>
+            </div>
 
-        {/* 팀 그리드 (Bento Grid Style) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredMembers.map((member) => (
-            <div
-              key={member.id}
-              onClick={() => handleOpenModal(member)}
-              className="group relative bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 hover:border-purple-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden backdrop-blur-sm"
-            >
+            {/* 팀 그리드 (Bento Grid Style) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredMembers.map((member) => (
+                <div
+                  key={member.id}
+                  onClick={() => handleOpenModal(member)}
+                  className="group relative bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 hover:border-purple-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden backdrop-blur-sm"
+                >
               {/* 카드 호버시 배경 효과 */}
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -227,6 +366,60 @@ export default function App() {
             <p className="text-slate-500 text-lg">검색 결과가 없습니다 😢</p>
           </div>
         )}
+        </>
+        ) : (
+          <>
+            {/* 게시판 헤더 */}
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-2">팀 게시판</h2>
+                <p className="text-slate-400">팀원들과 소통하고 정보를 공유하세요</p>
+              </div>
+              <button
+                onClick={() => setShowNewPostForm(true)}
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold rounded-xl transition-all duration-300 shadow-xl shadow-purple-500/25 border-2 border-purple-400 hover:border-purple-300 hover:shadow-2xl hover:shadow-purple-500/40 transform hover:scale-105"
+              >
+                <Plus size={20} className="text-white" />
+                <span className="tracking-wide">새 글 작성</span>
+              </button>
+            </div>
+
+            {/* 게시글 목록 */}
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <div
+                  key={post.id}
+                  onClick={() => setSelectedPost(post)}
+                  className="bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 hover:border-purple-500/50 rounded-xl p-6 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded-md text-xs font-medium">
+                        {post.category}
+                      </span>
+                      <span className="text-slate-400 text-sm flex items-center gap-1">
+                        <User size={14} />
+                        {post.author}
+                      </span>
+                    </div>
+                    <span className="text-slate-500 text-sm flex items-center gap-1">
+                      <Calendar size={14} />
+                      {post.date}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">{post.title}</h3>
+                  <p className="text-slate-300 line-clamp-2">{post.content}</p>
+                </div>
+              ))}
+            </div>
+
+            {posts.length === 0 && (
+              <div className="text-center py-20">
+                <p className="text-slate-500 text-lg">아직 게시글이 없습니다 📝</p>
+              </div>
+            )}
+          </>
+        )}
       </main>
 
       {/* 상세 모달 */}
@@ -239,12 +432,44 @@ export default function App() {
           
           <div className="relative w-full max-w-sm sm:max-w-md md:max-w-4xl max-h-[95vh] bg-[#1e293b] rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col">
             
-            <button 
-              onClick={handleCloseModal}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-20"
-            >
-              <X size={18} />
-            </button>
+            {/* 모달 헤더 */}
+            <div className="flex justify-between items-center p-4 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white">팀 멤버 정보</h2>
+              <div className="flex items-center gap-2">
+                {!isEditingMember ? (
+                  <button
+                    onClick={handleStartEdit}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-purple-200 rounded-lg text-sm transition-colors border border-purple-500/20"
+                  >
+                    <Edit3 size={14} />
+                    편집
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveEdit}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-300 hover:text-green-200 rounded-lg text-sm transition-colors border border-green-500/20"
+                    >
+                      <Save size={14} />
+                      저장
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-red-200 rounded-lg text-sm transition-colors border border-red-500/20"
+                    >
+                      <XCircle size={14} />
+                      취소
+                    </button>
+                  </div>
+                )}
+                <button 
+                  onClick={handleCloseModal}
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
 
             {/* 모바일: 세로 레이아웃, 데스크톱: 가로 레이아웃 */}
             <div className="flex flex-col md:flex-row overflow-y-auto">
@@ -281,7 +506,7 @@ export default function App() {
               {/* 상세 스탯 & 소개 */}
               <div className="w-full md:w-3/5 p-4 sm:p-6 md:p-8 bg-[#0f172a]">
                 <div className="mb-6 sm:mb-8">
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="flex items-center mb-3 sm:mb-4">
                     <h3 className="text-base sm:text-lg font-semibold text-slate-200 flex items-center gap-2">
                       <Zap className="text-yellow-400" size={18} />
                       능력치 분석
@@ -292,12 +517,50 @@ export default function App() {
                     <div className="flex justify-center mb-4 sm:mb-6">
                       <div className="scale-75 sm:scale-90 md:scale-100">
                         <HexChart 
-                          stats={currentMember.stats} 
+                          stats={isEditingMember ? editingMemberData?.stats || currentMember.stats : currentMember.stats} 
                           labels={STAT_LABELS} 
                           color="#8b5cf6"
                         />
                       </div>
                     </div>
+                    
+                    {/* 편집 모드일 때 슬라이더 표시 */}
+                    {isEditingMember && editingMemberData && (
+                      <div className="space-y-4 mt-6">
+                        <h4 className="text-sm font-medium text-slate-300 mb-3">능력치 조정</h4>
+                        {STAT_LABELS.map((label, index) => (
+                          <div key={index} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-slate-400">{label}</span>
+                              <span className="text-xs text-purple-300 font-mono">
+                                {editingMemberData.stats[index]}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={editingMemberData.stats[index]}
+                                onChange={(e) => handleStatChange(index, e.target.value)}
+                                className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
+                                style={{
+                                  background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${editingMemberData.stats[index]}%, #374151 ${editingMemberData.stats[index]}%, #374151 100%)`
+                                }}
+                              />
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={editingMemberData.stats[index]}
+                                onChange={(e) => handleStatChange(index, e.target.value)}
+                                className="w-16 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-xs text-white text-center focus:outline-none focus:ring-1 focus:ring-purple-500"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -318,6 +581,149 @@ export default function App() {
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 게시글 상세 모달 */}
+      {selectedPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => setSelectedPost(null)}
+          />
+          
+          <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#1e293b] rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+            
+            <button 
+              onClick={() => setSelectedPost(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-20"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="p-6 overflow-y-auto max-h-[90vh]">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-md text-sm font-medium">
+                  {selectedPost.category}
+                </span>
+                <span className="text-slate-400 text-sm flex items-center gap-1">
+                  <User size={14} />
+                  {selectedPost.author}
+                </span>
+                <span className="text-slate-500 text-sm flex items-center gap-1">
+                  <Calendar size={14} />
+                  {selectedPost.date}
+                </span>
+              </div>
+              
+              <h2 className="text-2xl font-bold text-white mb-6">{selectedPost.title}</h2>
+              
+              <div className="prose prose-invert max-w-none">
+                <p className="text-slate-300 leading-relaxed whitespace-pre-wrap">{selectedPost.content}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 새 글 작성 모달 */}
+      {showNewPostForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => setShowNewPostForm(false)}
+          />
+          
+          <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#1e293b] rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+            
+            <button 
+              onClick={() => setShowNewPostForm(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-20"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="p-6">
+              <h2 className="text-2xl font-bold text-white mb-6">새 글 작성</h2>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                addNewPost({
+                  title: formData.get('title'),
+                  content: formData.get('content'),
+                  author: formData.get('author'),
+                  category: formData.get('category')
+                });
+              }} className="space-y-4">
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">제목</label>
+                  <input
+                    name="title"
+                    type="text"
+                    required
+                    className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                    placeholder="게시글 제목을 입력하세요"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">작성자</label>
+                  <input
+                    name="author"
+                    type="text"
+                    required
+                    className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                    placeholder="작성자 이름을 입력하세요"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">카테고리</label>
+                  <select
+                    name="category"
+                    required
+                    className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                  >
+                    <option value="">카테고리 선택</option>
+                    {boardCategories.map((category) => (
+                      <option key={category.name} value={category.name}>
+                        {category.display_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">내용</label>
+                  <textarea
+                    name="content"
+                    required
+                    rows={8}
+                    className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all resize-none"
+                    placeholder="게시글 내용을 입력하세요"
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-6">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white py-3 px-6 rounded-xl transition-all duration-300 font-bold shadow-xl shadow-purple-500/25 border-2 border-purple-400 hover:border-purple-300 hover:shadow-2xl hover:shadow-purple-500/40 transform hover:scale-105"
+                  >
+                    게시글 작성
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPostForm(false)}
+                    className="px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-slate-700/25 border-2 border-slate-500 hover:border-slate-400 hover:shadow-xl hover:shadow-slate-600/40 transform hover:scale-105"
+                  >
+                    취소
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

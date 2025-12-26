@@ -183,6 +183,14 @@ export default function App() {
     }));
   };
 
+  // 기본 정보 변경 (이름, 이미지, 키워드, 소개 등)
+  const handleFieldChange = (field, value) => {
+    setEditingMemberData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   // 편집 저장
   const handleSaveEdit = async () => {
     try {
@@ -200,10 +208,10 @@ export default function App() {
       setIsEditingMember(false);
       setEditingMemberData(null);
       
-      alert('능력치가 성공적으로 업데이트되었습니다!');
+      alert('멤버 정보가 성공적으로 업데이트되었습니다!');
     } catch (error) {
       console.error('능력치 업데이트 실패:', error);
-      alert('능력치 업데이트에 실패했습니다. 다시 시도해주세요.');
+      alert('멤버 정보 업데이트에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
@@ -439,32 +447,32 @@ export default function App() {
                 {!isEditingMember ? (
                   <button
                     onClick={handleStartEdit}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-purple-200 rounded-lg text-sm transition-colors border border-purple-500/20"
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 text-purple-300 hover:text-purple-200 rounded-lg text-sm font-medium transition-all duration-300 border border-purple-500/30 hover:border-purple-400/50 shadow-lg"
                   >
-                    <Edit3 size={14} />
-                    편집
+                    <Edit3 size={16} />
+                    <span className="hidden sm:inline">편집</span>
                   </button>
                 ) : (
                   <div className="flex gap-2">
                     <button
                       onClick={handleSaveEdit}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-300 hover:text-green-200 rounded-lg text-sm transition-colors border border-green-500/20"
+                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 text-green-300 hover:text-green-200 rounded-lg text-sm font-medium transition-all duration-300 border border-green-500/30 hover:border-green-400/50 shadow-lg"
                     >
                       <Save size={14} />
-                      저장
+                      <span className="hidden sm:inline">저장</span>
                     </button>
                     <button
                       onClick={handleCancelEdit}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-red-200 rounded-lg text-sm transition-colors border border-red-500/20"
+                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-500/20 to-pink-500/20 hover:from-red-500/30 hover:to-pink-500/30 text-red-300 hover:text-red-200 rounded-lg text-sm font-medium transition-all duration-300 border border-red-500/30 hover:border-red-400/50 shadow-lg"
                     >
                       <XCircle size={14} />
-                      취소
+                      <span className="hidden sm:inline">취소</span>
                     </button>
                   </div>
                 )}
                 <button 
                   onClick={handleCloseModal}
-                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                  className="p-2 rounded-full bg-gradient-to-r from-slate-700/50 to-slate-600/50 hover:from-slate-600/70 hover:to-slate-500/70 text-slate-400 hover:text-white transition-all duration-300 border border-slate-600/30 hover:border-slate-500/50 shadow-lg"
                 >
                   <X size={18} />
                 </button>
@@ -477,29 +485,119 @@ export default function App() {
               <div className="w-full md:w-2/5 bg-gradient-to-br from-slate-800 to-slate-900 p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500" />
                 
+                {/* 프로필 이미지 */}
                 <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-slate-700/50 shadow-xl overflow-hidden mb-4 sm:mb-6 relative">
                    <img 
-                     src={currentMember.image} 
-                     alt={currentMember.name} 
+                     src={isEditingMember ? editingMemberData?.image || currentMember.image : currentMember.image} 
+                     alt={isEditingMember ? editingMemberData?.name || currentMember.name : currentMember.name} 
                      className="w-full h-full object-cover bg-slate-800" 
                    />
                 </div>
 
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 text-center">{currentMember.name}</h2>
+                {/* 이름 편집 */}
+                {isEditingMember && editingMemberData ? (
+                  <div className="w-full mb-4">
+                    <label className="block text-xs text-slate-400 mb-2 text-center">이름</label>
+                    <input
+                      type="text"
+                      value={editingMemberData.name}
+                      onChange={(e) => handleFieldChange('name', e.target.value)}
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-center text-lg sm:text-xl md:text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="이름을 입력하세요"
+                    />
+                  </div>
+                ) : (
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 text-center">{currentMember.name}</h2>
+                )}
 
-                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs sm:text-sm font-semibold mb-4 sm:mb-6 border border-blue-500/20">
-                  {currentMember.role}
-                </span>
+                {/* 역할 편집 */}
+                {isEditingMember && editingMemberData ? (
+                  <div className="mb-4">
+                    <label className="block text-xs text-slate-400 mb-2 text-center">역할</label>
+                    <input
+                      type="text"
+                      value={editingMemberData.role}
+                      onChange={(e) => handleFieldChange('role', e.target.value)}
+                      className="w-full bg-blue-500/10 border border-blue-500/30 rounded-full px-4 py-2 text-blue-300 text-center text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="역할을 입력하세요"
+                    />
+                  </div>
+                ) : (
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs sm:text-sm font-semibold mb-4 sm:mb-6 border border-blue-500/20">
+                    {currentMember.role}
+                  </span>
+                )}
 
                 <div className="w-full space-y-3 sm:space-y-4">
+                   {/* MBTI 편집 */}
                    <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
                       <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Brain size={14}/> MBTI</span>
-                      <span className="font-mono font-bold text-purple-400 text-sm sm:text-base">{currentMember.mbti}</span>
+                      {isEditingMember && editingMemberData ? (
+                        <select
+                          value={editingMemberData.mbti}
+                          onChange={(e) => handleFieldChange('mbti', e.target.value)}
+                          className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-purple-400 font-mono font-bold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                          <option value="">MBTI 선택</option>
+                          <optgroup label="분석가 (NT)">
+                            <option value="INTJ">INTJ - 건축가</option>
+                            <option value="INTP">INTP - 논리술사</option>
+                            <option value="ENTJ">ENTJ - 통솔자</option>
+                            <option value="ENTP">ENTP - 변론가</option>
+                          </optgroup>
+                          <optgroup label="외교관 (NF)">
+                            <option value="INFJ">INFJ - 옹호자</option>
+                            <option value="INFP">INFP - 중재자</option>
+                            <option value="ENFJ">ENFJ - 선도자</option>
+                            <option value="ENFP">ENFP - 활동가</option>
+                          </optgroup>
+                          <optgroup label="관리자 (SJ)">
+                            <option value="ISTJ">ISTJ - 물류담당자</option>
+                            <option value="ISFJ">ISFJ - 수호자</option>
+                            <option value="ESTJ">ESTJ - 경영자</option>
+                            <option value="ESFJ">ESFJ - 집정관</option>
+                          </optgroup>
+                          <optgroup label="탐험가 (SP)">
+                            <option value="ISTP">ISTP - 만능재주꾼</option>
+                            <option value="ISFP">ISFP - 모험가</option>
+                            <option value="ESTP">ESTP - 사업가</option>
+                            <option value="ESFP">ESFP - 연예인</option>
+                          </optgroup>
+                        </select>
+                      ) : (
+                        <span className="font-mono font-bold text-purple-400 text-sm sm:text-base">{currentMember.mbti}</span>
+                      )}
                    </div>
+                   
+                   {/* 키워드 편집 */}
                    <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
                       <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Hash size={14}/> 키워드</span>
-                      <span className="text-xs sm:text-sm text-slate-200">{currentMember.tags}</span>
+                      {isEditingMember && editingMemberData ? (
+                        <input
+                          type="text"
+                          value={editingMemberData.tags}
+                          onChange={(e) => handleFieldChange('tags', e.target.value)}
+                          className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                          placeholder="키워드를 입력하세요"
+                        />
+                      ) : (
+                        <span className="text-xs sm:text-sm text-slate-200">{currentMember.tags}</span>
+                      )}
                    </div>
+
+                   {/* 이미지 URL 편집 */}
+                   {isEditingMember && editingMemberData && (
+                     <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
+                        <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm">🖼️ 이미지 URL</span>
+                        <input
+                          type="url"
+                          value={editingMemberData.image}
+                          onChange={(e) => handleFieldChange('image', e.target.value)}
+                          className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                          placeholder="이미지 URL을 입력하세요"
+                        />
+                     </div>
+                   )}
                 </div>
               </div>
 
@@ -569,9 +667,19 @@ export default function App() {
                     <MessageCircle className="text-green-400" size={18} />
                     한줄 소개
                   </h3>
-                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed bg-slate-800/30 p-3 sm:p-4 rounded-xl border border-white/5 italic">
-                    "{currentMember.description}"
-                  </p>
+                  {isEditingMember && editingMemberData ? (
+                    <textarea
+                      value={editingMemberData.description}
+                      onChange={(e) => handleFieldChange('description', e.target.value)}
+                      rows={3}
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-slate-200 text-sm sm:text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                      placeholder="한줄 소개를 입력하세요"
+                    />
+                  ) : (
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed bg-slate-800/30 p-3 sm:p-4 rounded-xl border border-white/5 italic">
+                      "{currentMember.description}"
+                    </p>
+                  )}
                 </div>
                 
                 <div className="pt-4 sm:pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs sm:text-sm text-slate-500">

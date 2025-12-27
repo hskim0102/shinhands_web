@@ -1,9 +1,41 @@
 {
   "teamInfo": {
-    "name": "2026 금융DX팀",
-    "description": "우리는 27명의 전사들 입니다.",
-    "subtitle": "서로의 능력치를 확인하고 더 가까워지세요! 카드를 클릭하면 상세 스탯을 볼 수 있습니다."
+    "name": "DX본부",
+    "description": "디지털 혁신을 선도하는 DX본부",
+    "subtitle": "각 팀의 멤버들과 소통하고 협업하세요! 카드를 클릭하면 상세 정보를 볼 수 있습니다."
   },
+  "teams": [
+    {
+      "id": "dx-headquarters",
+      "name": "DX본부",
+      "description": "DX본부 전체 조직",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "dx-promotion",
+      "name": "DX추진팀",
+      "description": "DX 전략 기획 및 추진",
+      "color": "#06b6d4"
+    },
+    {
+      "id": "financial-dx",
+      "name": "금융DX팀",
+      "description": "금융 서비스 디지털 혁신",
+      "color": "#10b981"
+    },
+    {
+      "id": "mobile-dx",
+      "name": "모바일DX팀",
+      "description": "모바일 플랫폼 개발 및 운영",
+      "color": "#f59e0b"
+    },
+    {
+      "id": "global-dx",
+      "name": "글로벌DX팀",
+      "description": "글로벌 디지털 서비스 확장",
+      "color": "#ef4444"
+    }
+  ],
   "statLabels": [
     "드립력",
     "커피수혈", 

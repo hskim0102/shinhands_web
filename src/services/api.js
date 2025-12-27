@@ -83,6 +83,7 @@ export const teamMemberAPI = {
           tm.id,
           tm.name,
           tm.role,
+          tm.team_id as team,
           tm.mbti,
           tm.image_url as image,
           tm.description,
@@ -94,7 +95,7 @@ export const teamMemberAPI = {
         FROM team_members tm
         LEFT JOIN member_stats ms ON tm.id = ms.member_id
         LEFT JOIN stat_categories sc ON ms.stat_category_id = sc.id
-        GROUP BY tm.id, tm.name, tm.role, tm.mbti, tm.image_url, tm.description, tm.tags
+        GROUP BY tm.id, tm.name, tm.role, tm.team_id, tm.mbti, tm.image_url, tm.description, tm.tags
         ORDER BY tm.id
       `;
       console.log(`✅ 데이터베이스에서 ${result.length}명의 팀 멤버 조회 성공`);
@@ -118,6 +119,7 @@ export const teamMemberAPI = {
           tm.id,
           tm.name,
           tm.role,
+          tm.team_id as team,
           tm.mbti,
           tm.image_url as image,
           tm.description,
@@ -130,7 +132,7 @@ export const teamMemberAPI = {
         LEFT JOIN member_stats ms ON tm.id = ms.member_id
         LEFT JOIN stat_categories sc ON ms.stat_category_id = sc.id
         WHERE tm.id = ${id}
-        GROUP BY tm.id, tm.name, tm.role, tm.mbti, tm.image_url, tm.description, tm.tags
+        GROUP BY tm.id, tm.name, tm.role, tm.team_id, tm.mbti, tm.image_url, tm.description, tm.tags
       `;
       return result[0];
     } catch (error) {
@@ -149,8 +151,8 @@ export const teamMemberAPI = {
     try {
       // 팀 멤버 추가
       const memberResult = await sql`
-        INSERT INTO team_members (name, role, mbti, image_url, description, tags)
-        VALUES (${memberData.name}, ${memberData.role}, ${memberData.mbti}, ${memberData.image}, ${memberData.description}, ${memberData.tags})
+        INSERT INTO team_members (name, role, team_id, mbti, image_url, description, tags)
+        VALUES (${memberData.name}, ${memberData.role}, ${memberData.team || null}, ${memberData.mbti}, ${memberData.image}, ${memberData.description}, ${memberData.tags})
         RETURNING id
       `;
 
@@ -184,8 +186,8 @@ export const teamMemberAPI = {
       // 팀 멤버 정보 업데이트
       await sql`
         UPDATE team_members 
-        SET name = ${memberData.name}, role = ${memberData.role}, mbti = ${memberData.mbti}, 
-            image_url = ${memberData.image}, description = ${memberData.description}, 
+        SET name = ${memberData.name}, role = ${memberData.role}, team_id = ${memberData.team || null}, 
+            mbti = ${memberData.mbti}, image_url = ${memberData.image}, description = ${memberData.description}, 
             tags = ${memberData.tags}, updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
       `;
@@ -421,6 +423,75 @@ export const statsAPI = {
         { name: 'reliability', display_name: '신뢰도' },
         { name: 'passion', display_name: '열정' }
       ];
+    }
+  }
+};
+
+// 팀 API
+export const teamAPI = {
+  // 모든 팀 조회
+  async getAll() {
+    if (!sql) {
+      return [
+        { id: 'dx-headquarters', name: 'DX본부', description: 'DX본부 전체 조직', color: '#8b5cf6' },
+        { id: 'dx-promotion', name: 'DX추진팀', description: 'DX 전략 기획 및 추진', color: '#06b6d4' },
+        { id: 'financial-dx', name: '금융DX팀', description: '금융 서비스 디지털 혁신', color: '#10b981' },
+        { id: 'mobile-dx', name: '모바일DX팀', description: '모바일 플랫폼 개발 및 운영', color: '#f59e0b' },
+        { id: 'global-dx', name: '글로벌DX팀', description: '글로벌 디지털 서비스 확장', color: '#ef4444' }
+      ];
+    }
+
+    try {
+      const result = await sql`
+        SELECT id, name, description, color, created_at, updated_at
+        FROM teams
+        ORDER BY id
+      `;
+      return result;
+    } catch (error) {
+      console.error('팀 조회 실패:', error);
+      return [
+        { id: 'dx-headquarters', name: 'DX본부', description: 'DX본부 전체 조직', color: '#8b5cf6' },
+        { id: 'dx-promotion', name: 'DX추진팀', description: 'DX 전략 기획 및 추진', color: '#06b6d4' },
+        { id: 'financial-dx', name: '금융DX팀', description: '금융 서비스 디지털 혁신', color: '#10b981' },
+        { id: 'mobile-dx', name: '모바일DX팀', description: '모바일 플랫폼 개발 및 운영', color: '#f59e0b' },
+        { id: 'global-dx', name: '글로벌DX팀', description: '글로벌 디지털 서비스 확장', color: '#ef4444' }
+      ];
+    }
+  },
+
+  // 특정 팀의 멤버 조회
+  async getMembers(teamId) {
+    if (!sql) {
+      return fallbackTeamData.filter(m => m.team === teamId);
+    }
+
+    try {
+      const result = await sql`
+        SELECT 
+          tm.id,
+          tm.name,
+          tm.role,
+          tm.team_id as team,
+          tm.mbti,
+          tm.image_url as image,
+          tm.description,
+          tm.tags,
+          COALESCE(
+            array_agg(ms.value ORDER BY sc.sort_order) FILTER (WHERE ms.id IS NOT NULL),
+            ARRAY[]::integer[]
+          ) as stats
+        FROM team_members tm
+        LEFT JOIN member_stats ms ON tm.id = ms.member_id
+        LEFT JOIN stat_categories sc ON ms.stat_category_id = sc.id
+        WHERE tm.team_id = ${teamId}
+        GROUP BY tm.id, tm.name, tm.role, tm.team_id, tm.mbti, tm.image_url, tm.description, tm.tags
+        ORDER BY tm.id
+      `;
+      return result;
+    } catch (error) {
+      console.error('팀 멤버 조회 실패:', error);
+      return [];
     }
   }
 };

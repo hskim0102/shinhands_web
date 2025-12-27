@@ -82,8 +82,10 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [currentView, setCurrentView] = useState("team"); // "team" | "board"
+  const [selectedTeam, setSelectedTeam] = useState("all"); // "all" | team id
   const [selectedPost, setSelectedPost] = useState(null);
   const [showNewPostForm, setShowNewPostForm] = useState(false);
+  const [showNewMemberForm, setShowNewMemberForm] = useState(false);
   const [isEditingMember, setIsEditingMember] = useState(false);
   const [editingMemberData, setEditingMemberData] = useState(null);
 
@@ -131,14 +133,45 @@ export default function App() {
     }
   };
 
-  // 검색 필터링
+  // 새 멤버 추가
+  const addNewMember = async (memberData) => {
+    try {
+      const newMemberId = await teamMemberAPI.create(memberData);
+      // 팀 데이터 새로고침
+      const updatedTeamData = await teamMemberAPI.getAll();
+      setTeamData(updatedTeamData);
+      setShowNewMemberForm(false);
+      alert('새 멤버가 성공적으로 추가되었습니다!');
+    } catch (error) {
+      console.error('멤버 추가 실패:', error);
+      alert('멤버 추가에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
+  // 검색 및 팀 필터링
   const filteredMembers = useMemo(() => {
-    return teamData.filter(member =>
+    let filtered = teamData.filter(member =>
       member.name.includes(searchTerm) ||
       member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.mbti.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm, teamData]);
+    
+    if (selectedTeam !== "all") {
+      filtered = filtered.filter(member => member.team === selectedTeam);
+    }
+    
+    return filtered;
+  }, [searchTerm, teamData, selectedTeam]);
+
+  // 팀별 멤버 수 계산
+  const teamMemberCounts = useMemo(() => {
+    const counts = {};
+    teamConfig.teams.forEach(team => {
+      counts[team.id] = teamData.filter(member => member.team === team.id).length;
+    });
+    counts.all = teamData.length;
+    return counts;
+  }, [teamData]);
 
   // 모달에서 표시할 최신 멤버 데이터
   const currentMember = useMemo(() => {
@@ -308,8 +341,50 @@ export default function App() {
                 <FileText size={20} className={currentView === "board" ? "text-white" : "text-purple-300"} />
                 <span className="tracking-wide">게시판</span>
               </button>
+              <button
+                onClick={() => setShowNewMemberForm(true)}
+                className="flex items-center gap-3 px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 text-white hover:text-green-200 hover:bg-gradient-to-r hover:from-green-600 hover:to-emerald-600 border-2 border-transparent hover:border-green-500 hover:shadow-lg hover:shadow-green-500/25"
+              >
+                <Plus size={20} className="text-green-300" />
+                <span className="tracking-wide">멤버 추가</span>
+              </button>
             </div>
           </nav>
+
+          {/* 팀 필터 메뉴 (팀 멤버 뷰일 때만 표시) */}
+          {currentView === "team" && (
+            <div className="flex justify-center mt-6">
+              <div className="flex flex-wrap gap-2 bg-slate-800/50 rounded-xl p-3 border border-white/10">
+                <button
+                  onClick={() => setSelectedTeam("all")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    selectedTeam === "all"
+                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
+                      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+                  }`}
+                >
+                  전체 ({teamMemberCounts.all})
+                </button>
+                {teamConfig.teams.map((team) => (
+                  <button
+                    key={team.id}
+                    onClick={() => setSelectedTeam(team.id)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                      selectedTeam === team.id
+                        ? "text-white shadow-lg"
+                        : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+                    }`}
+                    style={{
+                      backgroundColor: selectedTeam === team.id ? team.color : 'transparent',
+                      borderColor: selectedTeam === team.id ? team.color : 'transparent'
+                    }}
+                  >
+                    {team.name} ({teamMemberCounts[team.id] || 0})
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -330,45 +405,62 @@ export default function App() {
 
             {/* 팀 그리드 (Bento Grid Style) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredMembers.map((member) => (
-                <div
-                  key={member.id}
-                  onClick={() => handleOpenModal(member)}
-                  className="group relative bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 hover:border-purple-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden backdrop-blur-sm"
-                >
-              {/* 카드 호버시 배경 효과 */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {filteredMembers.map((member) => {
+                const memberTeam = teamConfig.teams.find(team => team.id === member.team);
+                return (
+                  <div
+                    key={member.id}
+                    onClick={() => handleOpenModal(member)}
+                    className="group relative bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 hover:border-purple-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden backdrop-blur-sm"
+                  >
+                    {/* 카드 호버시 배경 효과 */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-              <div className="relative z-10 flex flex-col items-center">
-                <div className="relative mb-4">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 p-[2px]">
-                    <div className="w-full h-full rounded-full bg-slate-900 overflow-hidden">
-                      <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="relative mb-4">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 p-[2px]">
+                          <div className="w-full h-full rounded-full bg-slate-900 overflow-hidden">
+                            <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                          </div>
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 bg-slate-700 text-xs px-2 py-1 rounded-full border border-slate-600 font-mono text-purple-300">
+                          {member.mbti}
+                        </div>
+                      </div>
+
+                      <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
+                      <p className="text-sm text-slate-400 font-medium mb-2">{member.role}</p>
+                      
+                      {/* 팀 정보 표시 */}
+                      {memberTeam && (
+                        <div 
+                          className="px-2 py-1 rounded-md text-xs font-medium mb-3"
+                          style={{ 
+                            backgroundColor: `${memberTeam.color}20`, 
+                            color: memberTeam.color,
+                            border: `1px solid ${memberTeam.color}30`
+                          }}
+                        >
+                          {memberTeam.name}
+                        </div>
+                      )}
+                      
+                      <div className="w-full h-[1px] bg-white/10 my-3" />
+
+                      <p className="text-sm text-slate-300 text-center line-clamp-2 min-h-[2.5rem]">
+                        "{member.description}"
+                      </p>
+
+                      <div className="mt-4 flex gap-2 flex-wrap justify-center">
+                        <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-md">
+                          {member.tags}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="absolute -bottom-2 -right-2 bg-slate-700 text-xs px-2 py-1 rounded-full border border-slate-600 font-mono text-purple-300">
-                    {member.mbti}
-                  </div>
-                </div>
-
-                <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
-                <p className="text-sm text-slate-400 font-medium mb-3">{member.role}</p>
-                
-                <div className="w-full h-[1px] bg-white/10 my-3" />
-
-                <p className="text-sm text-slate-300 text-center line-clamp-2 min-h-[2.5rem]">
-                  "{member.description}"
-                </p>
-
-                <div className="mt-4 flex gap-2 flex-wrap justify-center">
-                   <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-md">
-                     {member.tags}
-                   </span>
-                </div>
-              </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
 
         {filteredMembers.length === 0 && (
           <div className="text-center py-20">
@@ -530,6 +622,42 @@ export default function App() {
                 )}
 
                 <div className="w-full space-y-3 sm:space-y-4">
+                   {/* 팀 정보 */}
+                   <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
+                      <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Users size={14}/> 소속팀</span>
+                      {isEditingMember && editingMemberData ? (
+                        <select
+                          value={editingMemberData.team || ''}
+                          onChange={(e) => handleFieldChange('team', e.target.value)}
+                          className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                          <option value="">팀 선택</option>
+                          {teamConfig.teams.map((team) => (
+                            <option key={team.id} value={team.id}>
+                              {team.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        (() => {
+                          const memberTeam = teamConfig.teams.find(team => team.id === currentMember.team);
+                          return memberTeam ? (
+                            <span 
+                              className="text-sm font-medium px-2 py-1 rounded-md"
+                              style={{ 
+                                backgroundColor: `${memberTeam.color}20`, 
+                                color: memberTeam.color 
+                              }}
+                            >
+                              {memberTeam.name}
+                            </span>
+                          ) : (
+                            <span className="text-xs sm:text-sm text-slate-200">미지정</span>
+                          );
+                        })()
+                      )}
+                   </div>
+
                    {/* MBTI 편집 */}
                    <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
                       <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Brain size={14}/> MBTI</span>
@@ -827,6 +955,226 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setShowNewPostForm(false)}
+                    className="px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-slate-700/25 border-2 border-slate-500 hover:border-slate-400 hover:shadow-xl hover:shadow-slate-600/40 transform hover:scale-105"
+                  >
+                    취소
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 새 멤버 추가 모달 */}
+      {showNewMemberForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => setShowNewMemberForm(false)}
+          />
+          
+          <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#1e293b] rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+            
+            <button 
+              onClick={() => setShowNewMemberForm(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-20"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="p-6 overflow-y-auto max-h-[90vh]">
+              <h2 className="text-2xl font-bold text-white mb-6">새 멤버 추가</h2>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                // 능력치 배열 생성
+                const stats = [];
+                for (let i = 0; i < STAT_LABELS.length; i++) {
+                  stats.push(parseInt(formData.get(`stat_${i}`) || 50));
+                }
+                
+                addNewMember({
+                  name: formData.get('name'),
+                  role: formData.get('role'),
+                  team: formData.get('team'),
+                  mbti: formData.get('mbti'),
+                  image: formData.get('image') || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.get('name')}&backgroundColor=b6e3f4`,
+                  description: formData.get('description'),
+                  tags: formData.get('tags'),
+                  stats: stats
+                });
+              }} className="space-y-4">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">이름 *</label>
+                    <input
+                      name="name"
+                      type="text"
+                      required
+                      className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                      placeholder="멤버 이름을 입력하세요"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">역할 *</label>
+                    <input
+                      name="role"
+                      type="text"
+                      required
+                      className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                      placeholder="예: 프로(수석), 팀장, PM 등"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">소속팀 *</label>
+                    <select
+                      name="team"
+                      required
+                      className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                    >
+                      <option value="">팀 선택</option>
+                      {teamConfig.teams.map((team) => (
+                        <option key={team.id} value={team.id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">MBTI *</label>
+                    <select
+                      name="mbti"
+                      required
+                      className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                    >
+                      <option value="">MBTI 선택</option>
+                      <optgroup label="분석가 (NT)">
+                        <option value="INTJ">INTJ - 건축가</option>
+                        <option value="INTP">INTP - 논리술사</option>
+                        <option value="ENTJ">ENTJ - 통솔자</option>
+                        <option value="ENTP">ENTP - 변론가</option>
+                      </optgroup>
+                      <optgroup label="외교관 (NF)">
+                        <option value="INFJ">INFJ - 옹호자</option>
+                        <option value="INFP">INFP - 중재자</option>
+                        <option value="ENFJ">ENFJ - 선도자</option>
+                        <option value="ENFP">ENFP - 활동가</option>
+                      </optgroup>
+                      <optgroup label="관리자 (SJ)">
+                        <option value="ISTJ">ISTJ - 물류담당자</option>
+                        <option value="ISFJ">ISFJ - 수호자</option>
+                        <option value="ESTJ">ESTJ - 경영자</option>
+                        <option value="ESFJ">ESFJ - 집정관</option>
+                      </optgroup>
+                      <optgroup label="탐험가 (SP)">
+                        <option value="ISTP">ISTP - 만능재주꾼</option>
+                        <option value="ISFP">ISFP - 모험가</option>
+                        <option value="ESTP">ESTP - 사업가</option>
+                        <option value="ESFP">ESFP - 연예인</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">프로필 이미지 URL</label>
+                  <input
+                    name="image"
+                    type="url"
+                    className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                    placeholder="이미지 URL (비워두면 자동 생성됩니다)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">한줄 소개 *</label>
+                  <textarea
+                    name="description"
+                    required
+                    rows={3}
+                    className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all resize-none"
+                    placeholder="멤버를 소개하는 한줄 설명을 입력하세요"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">키워드/태그</label>
+                  <input
+                    name="tags"
+                    type="text"
+                    className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                    placeholder="예: #개발자, #리더, #커피중독 등"
+                  />
+                </div>
+
+                {/* 능력치 설정 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-4">능력치 설정</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {STAT_LABELS.map((label, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">{label}</span>
+                          <span className="text-sm text-purple-300 font-mono" id={`stat_${index}_value`}>
+                            50
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="range"
+                            name={`stat_${index}`}
+                            min="0"
+                            max="100"
+                            defaultValue="50"
+                            onChange={(e) => {
+                              document.getElementById(`stat_${index}_value`).textContent = e.target.value;
+                              e.target.style.background = `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${e.target.value}%, #374151 ${e.target.value}%, #374151 100%)`;
+                            }}
+                            className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                            style={{
+                              background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 50%, #374151 50%, #374151 100%)`
+                            }}
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            defaultValue="50"
+                            onChange={(e) => {
+                              const value = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                              e.target.value = value;
+                              document.getElementById(`stat_${index}_value`).textContent = value;
+                              const range = e.target.parentElement.querySelector('input[type="range"]');
+                              range.value = value;
+                              range.style.background = `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${value}%, #374151 ${value}%, #374151 100%)`;
+                            }}
+                            className="w-16 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-xs text-white text-center focus:outline-none focus:ring-1 focus:ring-purple-500"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-6">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 px-6 rounded-xl transition-all duration-300 font-bold shadow-xl shadow-green-500/25 border-2 border-green-400 hover:border-green-300 hover:shadow-2xl hover:shadow-green-500/40 transform hover:scale-105"
+                  >
+                    멤버 추가
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewMemberForm(false)}
                     className="px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-slate-700/25 border-2 border-slate-500 hover:border-slate-400 hover:shadow-xl hover:shadow-slate-600/40 transform hover:scale-105"
                   >
                     취소

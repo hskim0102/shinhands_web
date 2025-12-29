@@ -13,8 +13,8 @@ const HexChart = ({ stats, labels, color = "#8b5cf6" }) => {
   const center = size / 2;
   const radius = (size / 2) - 30; // 텍스트 공간 확보
   const maxStat = 100;
- 
-  
+
+
   // 각도 계산 함수
   const getPoint = (value, index, total) => {
     const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
@@ -60,8 +60,8 @@ const HexChart = ({ stats, labels, color = "#8b5cf6" }) => {
         <polygon points={dataPoints} fill={color} fillOpacity="0.4" stroke={color} strokeWidth="2" />
         {/* 각 꼭지점 점 찍기 */}
         {stats.map((val, i) => {
-           const [cx, cy] = getPoint(val, i, stats.length).split(",");
-           return <circle key={i} cx={cx} cy={cy} r="3" fill="white" />;
+          const [cx, cy] = getPoint(val, i, stats.length).split(",");
+          return <circle key={i} cx={cx} cy={cy} r="3" fill="white" />;
         })}
         {labelElements}
       </svg>
@@ -78,7 +78,7 @@ export default function App() {
   const [boardCategories, setBoardCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [currentView, setCurrentView] = useState("team"); // "team" | "board"
@@ -98,7 +98,7 @@ export default function App() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // 병렬로 데이터 로드
       const [teamMembers, boardPosts, statCats, boardCats] = await Promise.all([
         teamMemberAPI.getAll(),
@@ -106,7 +106,7 @@ export default function App() {
         statsAPI.getCategories(),
         boardAPI.getCategories()
       ]);
-      
+
       setTeamData(teamMembers);
       setPosts(boardPosts);
       setStatCategories(statCats);
@@ -155,11 +155,11 @@ export default function App() {
       member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.mbti.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
+
     if (selectedTeam !== "all") {
       filtered = filtered.filter(member => member.team === selectedTeam);
     }
-    
+
     return filtered;
   }, [searchTerm, teamData, selectedTeam]);
 
@@ -230,18 +230,18 @@ export default function App() {
     try {
       setLoading(true);
       await teamMemberAPI.update(editingMemberData.id, editingMemberData);
-      
+
       // 팀 데이터 새로고침
       const updatedTeamData = await teamMemberAPI.getAll();
       setTeamData(updatedTeamData);
-      
+
       // 현재 선택된 멤버 업데이트
       const updatedMember = updatedTeamData.find(m => m.id === editingMemberData.id);
       setSelectedMember(updatedMember);
-      
+
       setIsEditingMember(false);
       setEditingMemberData(null);
-      
+
       alert('멤버 정보가 성공적으로 업데이트되었습니다!');
     } catch (error) {
       console.error('능력치 업데이트 실패:', error);
@@ -303,7 +303,7 @@ export default function App() {
                 </h1>
               </div>
             </div>
-            
+
             <div className="relative w-full md:w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
@@ -318,35 +318,58 @@ export default function App() {
 
           {/* 네비게이션 메뉴 */}
           <nav className="flex justify-center">
-            <div className="flex bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-2 border-2 border-slate-700 shadow-2xl">
+            <div className="flex flex-wrap gap-2 bg-slate-800/50 rounded-xl p-3 border border-white/10">
               <button
                 onClick={() => setCurrentView("team")}
-                className={`flex items-center gap-3 px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 ${
-                  currentView === "team"
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-xl shadow-purple-500/25 border-2 border-purple-400 transform scale-105"
-                    : "text-white hover:text-purple-200 hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-600 border-2 border-transparent hover:border-slate-500 hover:shadow-lg"
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${currentView === "team"
+                  ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
+                  : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+                  }`}
+
+                style={{
+                  backgroundColor: 'transparent',
+                  borderColor: 'transparent'
+                }}
               >
-                <Users size={20} className={currentView === "team" ? "text-white" : "text-purple-300"} />
-                <span className="tracking-wide">팀 멤버</span>
+                <div className="flex items-center gap-2">
+                  <Users size={18} />
+                  <span className="tracking-wide">팀 멤버</span>
+                </div>
               </button>
+
               <button
                 onClick={() => setCurrentView("board")}
-                className={`flex items-center gap-3 px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 ${
-                  currentView === "board"
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-xl shadow-purple-500/25 border-2 border-purple-400 transform scale-105"
-                    : "text-white hover:text-purple-200 hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-600 border-2 border-transparent hover:border-slate-500 hover:shadow-lg"
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${currentView === "board"
+                  ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
+                  : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+                  }`}
+
+                style={{
+                  backgroundColor: 'transparent',
+                  borderColor: 'transparent'
+                }}
+
               >
-                <FileText size={20} className={currentView === "board" ? "text-white" : "text-purple-300"} />
-                <span className="tracking-wide">게시판</span>
+                <div className="flex items-center gap-2">
+                  <FileText size={18} />
+                  <span className="tracking-wide">게시판</span>
+                </div>
               </button>
+
               <button
                 onClick={() => setShowNewMemberForm(true)}
-                className="flex items-center gap-3 px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 text-white hover:text-green-200 hover:bg-gradient-to-r hover:from-green-600 hover:to-emerald-600 border-2 border-transparent hover:border-green-500 hover:shadow-lg hover:shadow-green-500/25"
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 text-slate-300 hover:text-white hover:bg-slate-700/50"
+
+                style={{
+                  backgroundColor: 'transparent',
+                  borderColor: 'transparent'
+                }}
+
               >
-                <Plus size={20} className="text-green-300" />
-                <span className="tracking-wide">멤버 추가</span>
+                <div className="flex items-center gap-2">
+                  <Plus size={18} />
+                  <span className="tracking-wide">멤버 추가</span>
+                </div>
               </button>
             </div>
           </nav>
@@ -357,11 +380,14 @@ export default function App() {
               <div className="flex flex-wrap gap-2 bg-slate-800/50 rounded-xl p-3 border border-white/10">
                 <button
                   onClick={() => setSelectedTeam("all")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    selectedTeam === "all"
-                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
-                      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedTeam === "all"
+                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
+                    : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+                    }`}
+                  style={{
+                    backgroundColor: 'transparent',
+                    borderColor: 'transparent'
+                  }}
                 >
                   전체 ({teamMemberCounts.all})
                 </button>
@@ -369,11 +395,10 @@ export default function App() {
                   <button
                     key={team.id}
                     onClick={() => setSelectedTeam(team.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                      selectedTeam === team.id
-                        ? "text-white shadow-lg"
-                        : "text-slate-300 hover:text-white hover:bg-slate-700/50"
-                    }`}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedTeam === team.id
+                      ? "text-white shadow-lg"
+                      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+                      }`}
                     style={{
                       backgroundColor: selectedTeam === team.id ? team.color : 'transparent',
                       borderColor: selectedTeam === team.id ? team.color : 'transparent'
@@ -390,7 +415,7 @@ export default function App() {
 
       {/* 메인 컨텐츠 */}
       <main className="max-w-7xl mx-auto px-6 py-10">
-        
+
         {currentView === "team" ? (
           <>
             {/* 인트로 텍스트 */}
@@ -430,13 +455,13 @@ export default function App() {
 
                       <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
                       <p className="text-sm text-slate-400 font-medium mb-2">{member.role}</p>
-                      
+
                       {/* 팀 정보 표시 */}
                       {memberTeam && (
-                        <div 
+                        <div
                           className="px-2 py-1 rounded-md text-xs font-medium mb-3"
-                          style={{ 
-                            backgroundColor: `${memberTeam.color}20`, 
+                          style={{
+                            backgroundColor: `${memberTeam.color}20`,
                             color: memberTeam.color,
                             border: `1px solid ${memberTeam.color}30`
                           }}
@@ -444,7 +469,7 @@ export default function App() {
                           {memberTeam.name}
                         </div>
                       )}
-                      
+
                       <div className="w-full h-[1px] bg-white/10 my-3" />
 
                       <p className="text-sm text-slate-300 text-center line-clamp-2 min-h-[2.5rem]">
@@ -462,12 +487,12 @@ export default function App() {
               })}
             </div>
 
-        {filteredMembers.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-slate-500 text-lg">검색 결과가 없습니다 😢</p>
-          </div>
-        )}
-        </>
+            {filteredMembers.length === 0 && (
+              <div className="text-center py-20">
+                <p className="text-slate-500 text-lg">검색 결과가 없습니다 😢</p>
+              </div>
+            )}
+          </>
         ) : (
           <>
             {/* 게시판 헤더 */}
@@ -478,9 +503,9 @@ export default function App() {
               </div>
               <button
                 onClick={() => setShowNewPostForm(true)}
-                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold rounded-xl transition-all duration-300 shadow-xl shadow-purple-500/25 border-2 border-purple-400 hover:border-purple-300 hover:shadow-2xl hover:shadow-purple-500/40 transform hover:scale-105"
+                className="flex items-center gap-2 px-6 py-2.5 bg-white text-black hover:bg-slate-200 font-bold rounded-full transition-all duration-300 shadow-lg shadow-white/10 active:scale-95"
               >
-                <Plus size={20} className="text-white" />
+                <Plus size={20} className="text-black" />
                 <span className="tracking-wide">새 글 작성</span>
               </button>
             </div>
@@ -526,13 +551,13 @@ export default function App() {
       {/* 상세 모달 */}
       {currentMember && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={handleCloseModal}
           />
-          
+
           <div className="relative w-full max-w-sm sm:max-w-md md:max-w-4xl max-h-[95vh] bg-[#1e293b] rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col">
-            
+
             {/* 모달 헤더 */}
             <div className="flex justify-between items-center p-4 border-b border-white/10">
               <h2 className="text-lg font-semibold text-white">팀 멤버 정보</h2>
@@ -540,34 +565,35 @@ export default function App() {
                 {!isEditingMember ? (
                   <button
                     onClick={handleStartEdit}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 text-purple-300 hover:text-purple-200 rounded-lg text-sm font-medium transition-all duration-300 border border-purple-500/30 hover:border-purple-400/50 shadow-lg"
+                    className="flex items-center justify-center gap-2 h-10 px-5 !bg-[#8b5cf6] hover:!bg-violet-500 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-lg shadow-violet-500/30 active:scale-95"
                   >
-                    <Edit3 size={16} />
+                    <Edit3 size={18} />
                     <span className="hidden sm:inline">편집</span>
+                    <span className="inline sm:hidden">편집</span>
                   </button>
                 ) : (
                   <div className="flex gap-2">
                     <button
                       onClick={handleSaveEdit}
-                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 text-green-300 hover:text-green-200 rounded-lg text-sm font-medium transition-all duration-300 border border-green-500/30 hover:border-green-400/50 shadow-lg"
+                      className="flex items-center justify-center gap-2 h-10 px-5 !bg-[#8b5cf6] hover:!bg-violet-500 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-lg shadow-violet-500/30 active:scale-95"
                     >
-                      <Save size={14} />
-                      <span className="hidden sm:inline">저장</span>
+                      <Save size={18} />
+                      <span>저장</span>
                     </button>
                     <button
                       onClick={handleCancelEdit}
-                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-500/20 to-pink-500/20 hover:from-red-500/30 hover:to-pink-500/30 text-red-300 hover:text-red-200 rounded-lg text-sm font-medium transition-all duration-300 border border-red-500/30 hover:border-red-400/50 shadow-lg"
+                      className="flex items-center justify-center gap-2 h-10 px-5 !bg-slate-600 hover:!bg-slate-500 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-md active:scale-95"
                     >
-                      <XCircle size={14} />
-                      <span className="hidden sm:inline">취소</span>
+                      <XCircle size={18} />
+                      <span>취소</span>
                     </button>
                   </div>
                 )}
-                <button 
+                <button
                   onClick={handleCloseModal}
-                  className="p-2 rounded-full bg-gradient-to-r from-slate-700/50 to-slate-600/50 hover:from-slate-600/70 hover:to-slate-500/70 text-slate-400 hover:text-white transition-all duration-300 border border-slate-600/30 hover:border-slate-500/50 shadow-lg"
+                  className="flex items-center justify-center w-10 h-10 rounded-full !bg-[#8b5cf6] hover:!bg-violet-500 !text-white transition-all duration-300 shadow-lg hover:shadow-violet-500/30 hover:rotate-90"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               </div>
             </div>
@@ -577,14 +603,14 @@ export default function App() {
               {/* 프로필 정보 */}
               <div className="w-full md:w-2/5 bg-gradient-to-br from-slate-800 to-slate-900 p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500" />
-                
+
                 {/* 프로필 이미지 */}
                 <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-slate-700/50 shadow-xl overflow-hidden mb-4 sm:mb-6 relative">
-                   <img 
-                     src={isEditingMember ? editingMemberData?.image || currentMember.image : currentMember.image} 
-                     alt={isEditingMember ? editingMemberData?.name || currentMember.name : currentMember.name} 
-                     className="w-full h-full object-cover bg-slate-800" 
-                   />
+                  <img
+                    src={isEditingMember ? editingMemberData?.image || currentMember.image : currentMember.image}
+                    alt={isEditingMember ? editingMemberData?.name || currentMember.name : currentMember.name}
+                    className="w-full h-full object-cover bg-slate-800"
+                  />
                 </div>
 
                 {/* 이름 편집 */}
@@ -622,111 +648,111 @@ export default function App() {
                 )}
 
                 <div className="w-full space-y-3 sm:space-y-4">
-                   {/* 팀 정보 */}
-                   <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
-                      <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Users size={14}/> 소속팀</span>
-                      {isEditingMember && editingMemberData ? (
-                        <select
-                          value={editingMemberData.team || ''}
-                          onChange={(e) => handleFieldChange('team', e.target.value)}
-                          className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        >
-                          <option value="">팀 선택</option>
-                          {teamConfig.teams.map((team) => (
-                            <option key={team.id} value={team.id}>
-                              {team.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        (() => {
-                          const memberTeam = teamConfig.teams.find(team => team.id === currentMember.team);
-                          return memberTeam ? (
-                            <span 
-                              className="text-sm font-medium px-2 py-1 rounded-md"
-                              style={{ 
-                                backgroundColor: `${memberTeam.color}20`, 
-                                color: memberTeam.color 
-                              }}
-                            >
-                              {memberTeam.name}
-                            </span>
-                          ) : (
-                            <span className="text-xs sm:text-sm text-slate-200">미지정</span>
-                          );
-                        })()
-                      )}
-                   </div>
+                  {/* 팀 정보 */}
+                  <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
+                    <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Users size={14} /> 소속팀</span>
+                    {isEditingMember && editingMemberData ? (
+                      <select
+                        value={editingMemberData.team || ''}
+                        onChange={(e) => handleFieldChange('team', e.target.value)}
+                        className="w-full bg-slate-700 border border-slate-500 rounded-md px-3 py-2 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent [&>option]:bg-slate-800 [&>option]:text-white"
+                      >
+                        <option value="">팀 선택</option>
+                        {teamConfig.teams.map((team) => (
+                          <option key={team.id} value={team.id}>
+                            {team.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      (() => {
+                        const memberTeam = teamConfig.teams.find(team => team.id === currentMember.team);
+                        return memberTeam ? (
+                          <span
+                            className="text-sm font-medium px-2 py-1 rounded-md"
+                            style={{
+                              backgroundColor: `${memberTeam.color}20`,
+                              color: memberTeam.color
+                            }}
+                          >
+                            {memberTeam.name}
+                          </span>
+                        ) : (
+                          <span className="text-xs sm:text-sm text-slate-200">미지정</span>
+                        );
+                      })()
+                    )}
+                  </div>
 
-                   {/* MBTI 편집 */}
-                   <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
-                      <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Brain size={14}/> MBTI</span>
-                      {isEditingMember && editingMemberData ? (
-                        <select
-                          value={editingMemberData.mbti}
-                          onChange={(e) => handleFieldChange('mbti', e.target.value)}
-                          className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-purple-400 font-mono font-bold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        >
-                          <option value="">MBTI 선택</option>
-                          <optgroup label="분석가 (NT)">
-                            <option value="INTJ">INTJ - 건축가</option>
-                            <option value="INTP">INTP - 논리술사</option>
-                            <option value="ENTJ">ENTJ - 통솔자</option>
-                            <option value="ENTP">ENTP - 변론가</option>
-                          </optgroup>
-                          <optgroup label="외교관 (NF)">
-                            <option value="INFJ">INFJ - 옹호자</option>
-                            <option value="INFP">INFP - 중재자</option>
-                            <option value="ENFJ">ENFJ - 선도자</option>
-                            <option value="ENFP">ENFP - 활동가</option>
-                          </optgroup>
-                          <optgroup label="관리자 (SJ)">
-                            <option value="ISTJ">ISTJ - 물류담당자</option>
-                            <option value="ISFJ">ISFJ - 수호자</option>
-                            <option value="ESTJ">ESTJ - 경영자</option>
-                            <option value="ESFJ">ESFJ - 집정관</option>
-                          </optgroup>
-                          <optgroup label="탐험가 (SP)">
-                            <option value="ISTP">ISTP - 만능재주꾼</option>
-                            <option value="ISFP">ISFP - 모험가</option>
-                            <option value="ESTP">ESTP - 사업가</option>
-                            <option value="ESFP">ESFP - 연예인</option>
-                          </optgroup>
-                        </select>
-                      ) : (
-                        <span className="font-mono font-bold text-purple-400 text-sm sm:text-base">{currentMember.mbti}</span>
-                      )}
-                   </div>
-                   
-                   {/* 키워드 편집 */}
-                   <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
-                      <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Hash size={14}/> 키워드</span>
-                      {isEditingMember && editingMemberData ? (
-                        <input
-                          type="text"
-                          value={editingMemberData.tags}
-                          onChange={(e) => handleFieldChange('tags', e.target.value)}
-                          className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="키워드를 입력하세요"
-                        />
-                      ) : (
-                        <span className="text-xs sm:text-sm text-slate-200">{currentMember.tags}</span>
-                      )}
-                   </div>
+                  {/* MBTI 편집 */}
+                  <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
+                    <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Brain size={14} /> MBTI</span>
+                    {isEditingMember && editingMemberData ? (
+                      <select
+                        value={editingMemberData.mbti}
+                        onChange={(e) => handleFieldChange('mbti', e.target.value)}
+                        className="w-full bg-slate-700 border border-slate-500 rounded-md px-3 py-2 text-white font-bold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent [&>optgroup]:bg-slate-800 [&>option]:bg-slate-800 [&>option]:text-white"
+                      >
+                        <option value="">MBTI 선택</option>
+                        <optgroup label="분석가 (NT)">
+                          <option value="INTJ">INTJ - 건축가</option>
+                          <option value="INTP">INTP - 논리술사</option>
+                          <option value="ENTJ">ENTJ - 통솔자</option>
+                          <option value="ENTP">ENTP - 변론가</option>
+                        </optgroup>
+                        <optgroup label="외교관 (NF)">
+                          <option value="INFJ">INFJ - 옹호자</option>
+                          <option value="INFP">INFP - 중재자</option>
+                          <option value="ENFJ">ENFJ - 선도자</option>
+                          <option value="ENFP">ENFP - 활동가</option>
+                        </optgroup>
+                        <optgroup label="관리자 (SJ)">
+                          <option value="ISTJ">ISTJ - 물류담당자</option>
+                          <option value="ISFJ">ISFJ - 수호자</option>
+                          <option value="ESTJ">ESTJ - 경영자</option>
+                          <option value="ESFJ">ESFJ - 집정관</option>
+                        </optgroup>
+                        <optgroup label="탐험가 (SP)">
+                          <option value="ISTP">ISTP - 만능재주꾼</option>
+                          <option value="ISFP">ISFP - 모험가</option>
+                          <option value="ESTP">ESTP - 사업가</option>
+                          <option value="ESFP">ESFP - 연예인</option>
+                        </optgroup>
+                      </select>
+                    ) : (
+                      <span className="font-mono font-bold text-purple-400 text-sm sm:text-base">{currentMember.mbti}</span>
+                    )}
+                  </div>
 
-                   {/* 이미지 URL 편집 */}
-                   {isEditingMember && editingMemberData && (
-                     <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
-                        <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm">🖼️ 이미지 URL</span>
-                        <input
-                          type="url"
-                          value={editingMemberData.image}
-                          onChange={(e) => handleFieldChange('image', e.target.value)}
-                          className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="이미지 URL을 입력하세요"
-                        />
-                     </div>
-                   )}
+                  {/* 키워드 편집 */}
+                  <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
+                    <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm"><Hash size={14} /> 키워드</span>
+                    {isEditingMember && editingMemberData ? (
+                      <input
+                        type="text"
+                        value={editingMemberData.tags}
+                        onChange={(e) => handleFieldChange('tags', e.target.value)}
+                        className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="키워드를 입력하세요"
+                      />
+                    ) : (
+                      <span className="text-xs sm:text-sm text-slate-200">{currentMember.tags}</span>
+                    )}
+                  </div>
+
+                  {/* 이미지 URL 편집 */}
+                  {isEditingMember && editingMemberData && (
+                    <div className="p-2 sm:p-3 bg-white/5 rounded-xl">
+                      <span className="text-slate-400 flex items-center gap-2 mb-1 sm:mb-2 text-sm">🖼️ 이미지 URL</span>
+                      <input
+                        type="url"
+                        value={editingMemberData.image}
+                        onChange={(e) => handleFieldChange('image', e.target.value)}
+                        className="w-full bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 text-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="이미지 URL을 입력하세요"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -739,18 +765,18 @@ export default function App() {
                       능력치 분석
                     </h3>
                   </div>
-                  
+
                   <div className="bg-slate-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/5">
                     <div className="flex justify-center mb-4 sm:mb-6">
                       <div className="scale-75 sm:scale-90 md:scale-100">
-                        <HexChart 
-                          stats={isEditingMember ? editingMemberData?.stats || currentMember.stats : currentMember.stats} 
-                          labels={STAT_LABELS} 
+                        <HexChart
+                          stats={isEditingMember ? editingMemberData?.stats || currentMember.stats : currentMember.stats}
+                          labels={STAT_LABELS}
                           color="#8b5cf6"
                         />
                       </div>
                     </div>
-                    
+
                     {/* 편집 모드일 때 슬라이더 표시 */}
                     {isEditingMember && editingMemberData && (
                       <div className="space-y-4 mt-6">
@@ -810,7 +836,7 @@ export default function App() {
                     </p>
                   )}
                 </div>
-                
+
                 <div className="pt-4 sm:pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs sm:text-sm text-slate-500">
                   <span>Employee ID: #{currentMember.id.toString().padStart(3, '0')}</span>
                   <span className="flex items-center gap-1">
@@ -826,14 +852,14 @@ export default function App() {
       {/* 게시글 상세 모달 */}
       {selectedPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setSelectedPost(null)}
           />
-          
+
           <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#1e293b] rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-            
-            <button 
+
+            <button
               onClick={() => setSelectedPost(null)}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-20"
             >
@@ -854,9 +880,9 @@ export default function App() {
                   {selectedPost.date}
                 </span>
               </div>
-              
+
               <h2 className="text-2xl font-bold text-white mb-6">{selectedPost.title}</h2>
-              
+
               <div className="prose prose-invert max-w-none">
                 <p className="text-slate-300 leading-relaxed whitespace-pre-wrap">{selectedPost.content}</p>
               </div>
@@ -868,14 +894,14 @@ export default function App() {
       {/* 새 글 작성 모달 */}
       {showNewPostForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setShowNewPostForm(false)}
           />
-          
+
           <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#1e293b] rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-            
-            <button 
+
+            <button
               onClick={() => setShowNewPostForm(false)}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-20"
             >
@@ -884,7 +910,7 @@ export default function App() {
 
             <div className="p-6">
               <h2 className="text-2xl font-bold text-white mb-6">새 글 작성</h2>
-              
+
               <form onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
@@ -895,7 +921,7 @@ export default function App() {
                   category: formData.get('category')
                 });
               }} className="space-y-4">
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">제목</label>
                   <input
@@ -969,14 +995,14 @@ export default function App() {
       {/* 새 멤버 추가 모달 */}
       {showNewMemberForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setShowNewMemberForm(false)}
           />
-          
+
           <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#1e293b] rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-            
-            <button 
+
+            <button
               onClick={() => setShowNewMemberForm(false)}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-20"
             >
@@ -985,17 +1011,17 @@ export default function App() {
 
             <div className="p-6 overflow-y-auto max-h-[90vh]">
               <h2 className="text-2xl font-bold text-white mb-6">새 멤버 추가</h2>
-              
+
               <form onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
-                
+
                 // 능력치 배열 생성
                 const stats = [];
                 for (let i = 0; i < STAT_LABELS.length; i++) {
                   stats.push(parseInt(formData.get(`stat_${i}`) || 50));
                 }
-                
+
                 addNewMember({
                   name: formData.get('name'),
                   role: formData.get('role'),
@@ -1007,7 +1033,7 @@ export default function App() {
                   stats: stats
                 });
               }} className="space-y-4">
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">이름 *</label>

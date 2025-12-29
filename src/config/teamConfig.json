@@ -38,7 +38,7 @@
   ],
   "statLabels": [
     "드립력",
-    "커피수혈", 
+    "커피수혈",
     "칼퇴본능",
     "멘탈갑",
     "알콜해독",
@@ -46,7 +46,7 @@
   ],
   "roles": [
     "Frontend Dev",
-    "Backend Dev", 
+    "Backend Dev",
     "Designer",
     "PM",
     "Marketer",
@@ -54,7 +54,7 @@
   ],
   "mbtiTypes": [
     "ENFP",
-    "ISTJ", 
+    "ISTJ",
     "INTP",
     "ESFJ",
     "ENTJ"
@@ -62,13 +62,13 @@
   "defaultTags": [
     "#맛집탐험대",
     "#헬창",
-    "#고양이집사", 
+    "#고양이집사",
     "#넷플릭스중독"
   ],
   "avatarSeeds": [
     "Felix",
     "Aneka",
-    "Zack", 
+    "Zack",
     "Sarah",
     "James",
     "Mimi",

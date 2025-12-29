@@ -1,11 +1,20 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle } from 'lucide-react';
+import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle, Grid, Hexagon, Rocket, BarChart3, Smartphone, Globe2 } from 'lucide-react';
 import { getTeamConfig } from './utils/configLoader';
 import { teamMemberAPI, boardAPI, statsAPI } from './services/api';
 
 // 설정파일에서 데이터 로드
 const teamConfig = getTeamConfig();
 const STAT_LABELS = teamConfig.statLabels;
+
+// 팀 아이콘 매핑
+const TEAM_ICONS = {
+  "dx-headquarters": Hexagon,
+  "dx-promotion": Rocket,
+  "financial-dx": BarChart3,
+  "mobile-dx": Smartphone,
+  "global-dx": Globe2,
+};
 
 // --- 컴포넌트: 육각형 레이더 차트 (SVG) ---
 const HexChart = ({ stats, labels, color = "#8b5cf6" }) => {
@@ -333,7 +342,7 @@ export default function App() {
               >
                 <div className="flex items-center gap-2">
                   <Users size={18} />
-                  <span className="tracking-wide">팀 멤버</span>
+                  <span className="tracking-wide hidden sm:inline">팀 멤버</span>
                 </div>
               </button>
 
@@ -352,7 +361,7 @@ export default function App() {
               >
                 <div className="flex items-center gap-2">
                   <FileText size={18} />
-                  <span className="tracking-wide">게시판</span>
+                  <span className="tracking-wide hidden sm:inline">게시판</span>
                 </div>
               </button>
 
@@ -368,7 +377,7 @@ export default function App() {
               >
                 <div className="flex items-center gap-2">
                   <Plus size={18} />
-                  <span className="tracking-wide">멤버 추가</span>
+                  <span className="tracking-wide hidden sm:inline">멤버 추가</span>
                 </div>
               </button>
             </div>
@@ -389,24 +398,33 @@ export default function App() {
                     borderColor: 'transparent'
                   }}
                 >
-                  전체 ({teamMemberCounts.all})
+                  <div className="flex items-center gap-2">
+                    <Grid size={18} />
+                    <span className="hidden sm:inline">전체 ({teamMemberCounts.all})</span>
+                  </div>
                 </button>
-                {teamConfig.teams.map((team) => (
-                  <button
-                    key={team.id}
-                    onClick={() => setSelectedTeam(team.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedTeam === team.id
-                      ? "text-white shadow-lg"
-                      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
-                      }`}
-                    style={{
-                      backgroundColor: selectedTeam === team.id ? team.color : 'transparent',
-                      borderColor: selectedTeam === team.id ? team.color : 'transparent'
-                    }}
-                  >
-                    {team.name} ({teamMemberCounts[team.id] || 0})
-                  </button>
-                ))}
+                {teamConfig.teams.map((team) => {
+                  const TeamIcon = TEAM_ICONS[team.id] || Users;
+                  return (
+                    <button
+                      key={team.id}
+                      onClick={() => setSelectedTeam(team.id)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedTeam === team.id
+                        ? "text-white shadow-lg"
+                        : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+                        }`}
+                      style={{
+                        backgroundColor: selectedTeam === team.id ? team.color : 'transparent',
+                        borderColor: selectedTeam === team.id ? team.color : 'transparent'
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <TeamIcon size={18} />
+                        <span className="hidden sm:inline">{team.name} ({teamMemberCounts[team.id] || 0})</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

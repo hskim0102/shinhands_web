@@ -12,13 +12,13 @@ try {
   console.log('🔍 데이터베이스 연결 설정 확인:');
   console.log('- import.meta.env:', import.meta.env);
   console.log('- VITE_DATABASE_URL:', import.meta.env.VITE_DATABASE_URL);
-  
+
   // 환경 변수 또는 하드코딩된 URL 사용
   const databaseUrl = import.meta.env.VITE_DATABASE_URL || HARDCODED_DB_URL;
-  
+
   console.log('- 최종 사용할 URL 길이:', databaseUrl?.length || 0);
   console.log('- URL 호스트 부분:', databaseUrl?.split('@')[1]?.split('/')[0] || 'unknown');
-  
+
   console.log('🔗 Neon 연결 초기화 중...');
   sql = neon(databaseUrl);
   console.log('✅ 데이터베이스 연결 초기화 성공');
@@ -69,7 +69,7 @@ export const teamMemberAPI = {
   // 모든 팀 멤버 조회
   async getAll() {
     console.log('🔍 팀 멤버 데이터 조회 시작...');
-    
+
     if (!sql) {
       console.warn('❌ 데이터베이스 연결 없음, 폴백 데이터 사용');
       console.warn('연결 오류:', connectionError);
@@ -104,6 +104,34 @@ export const teamMemberAPI = {
       console.error('❌ 팀 멤버 조회 실패, 폴백 데이터 사용:', error.message);
       console.error('오류 상세:', error);
       return fallbackTeamData;
+    }
+  },
+
+  // 로그인 (사번, 비밀번호 확인)
+  async login(empId, password) {
+    if (!sql) {
+      console.warn('❌ 데이터베이스 연결 없음, 로그인 불가 (폴백 데이터 사용 안 함)');
+      throw new Error('데이터베이스 연결이 필요합니다');
+    }
+
+    try {
+      // emp_id와 password가 일치하는 멤버 조회
+      const result = await sql`
+        SELECT id, name, emp_id, role, team_id, image_url, description
+        FROM team_members 
+        WHERE emp_id = ${empId} AND password = ${password}
+      `;
+
+      if (result.length > 0) {
+        console.log(`✅ 로그인 성공: ${result[0].name} (ID: ${result[0].id})`);
+        return result[0];
+      } else {
+        console.warn('❌ 로그인 실패: 사번 또는 비밀번호 불일치');
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ 로그인 쿼리 실행 중 오류:', error);
+      throw error;
     }
   },
 
@@ -271,7 +299,7 @@ export const boardAPI = {
     try {
       // 조회수 증가
       await sql`UPDATE posts SET view_count = view_count + 1 WHERE id = ${id}`;
-      
+
       // 게시글 조회
       const result = await sql`
         SELECT 
@@ -289,7 +317,7 @@ export const boardAPI = {
         JOIN board_categories bc ON p.category_id = bc.id
         WHERE p.id = ${id} AND p.is_deleted = FALSE
       `;
-      
+
       return result[0];
     } catch (error) {
       console.error('게시글 조회 실패:', error);
@@ -311,7 +339,7 @@ export const boardAPI = {
                 (SELECT id FROM board_categories WHERE name = ${postData.category}))
         RETURNING id
       `;
-      
+
       return result[0].id;
     } catch (error) {
       console.error('게시글 생성 실패:', error);
@@ -332,7 +360,7 @@ export const boardAPI = {
         SET title = ${postData.title}, content = ${postData.content}, updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id} AND is_deleted = FALSE
       `;
-      
+
       return id;
     } catch (error) {
       console.error('게시글 업데이트 실패:', error);
@@ -353,7 +381,7 @@ export const boardAPI = {
         SET is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
       `;
-      
+
       return true;
     } catch (error) {
       console.error('게시글 삭제 실패:', error);

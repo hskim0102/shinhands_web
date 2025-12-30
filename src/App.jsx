@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle, Grid, Hexagon, Rocket, BarChart3, Smartphone, Globe2, Trash2 } from 'lucide-react';
+import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle, Grid, Hexagon, Rocket, BarChart3, Smartphone, Globe2, Trash2, LogOut } from 'lucide-react';
+import LoginPage from './LoginPage';
 import { getTeamConfig } from './utils/configLoader';
 import { teamMemberAPI, boardAPI, statsAPI } from './services/api';
 
@@ -97,6 +98,35 @@ export default function App() {
   const [showNewMemberForm, setShowNewMemberForm] = useState(false);
   const [isEditingMember, setIsEditingMember] = useState(false);
   const [editingMemberData, setEditingMemberData] = useState(null);
+
+  // 인증 상태
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // 초기 로딩 시 로그인 상태 확인
+  useEffect(() => {
+    const savedUser = localStorage.getItem('team_user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // 로그인 핸들러
+  const handleLogin = (user) => {
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+    localStorage.setItem('team_user', JSON.stringify(user));
+  };
+
+  // 로그아웃 핸들러
+  const handleLogout = () => {
+    if (window.confirm('로그아웃 하시겠습니까?')) {
+      setCurrentUser(null);
+      setIsLoggedIn(false);
+      localStorage.removeItem('team_user');
+    }
+  };
 
   // 데이터 로드
   useEffect(() => {
@@ -284,6 +314,10 @@ export default function App() {
     }
   };
 
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0f172a] text-white font-sans selection:bg-purple-500 selection:text-white pb-24 md:pb-20">
       {/* 배경 장식 (Gradients) */}
@@ -346,6 +380,25 @@ export default function App() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-slate-800/50 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all placeholder:text-slate-500"
               />
+            </div>
+
+            {/* 사용자 정보 및 로그아웃 */}
+            <div className="flex items-center gap-3">
+              {currentUser && (
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-full border border-white/5">
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-slate-700">
+                    <img src={currentUser.image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.name}`} alt="User" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-sm text-slate-300 font-medium">{currentUser.name}</span>
+                </div>
+              )}
+              <button
+                onClick={handleLogout}
+                className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                title="로그아웃"
+              >
+                <LogOut size={20} />
+              </button>
             </div>
           </div>
 

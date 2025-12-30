@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle, Grid, Hexagon, Rocket, BarChart3, Smartphone, Globe2 } from 'lucide-react';
+import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle, Grid, Hexagon, Rocket, BarChart3, Smartphone, Globe2, Trash2 } from 'lucide-react';
 import { getTeamConfig } from './utils/configLoader';
 import { teamMemberAPI, boardAPI, statsAPI } from './services/api';
 
@@ -255,6 +255,30 @@ export default function App() {
     } catch (error) {
       console.error('능력치 업데이트 실패:', error);
       alert('멤버 정보 업데이트에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 멤버 삭제
+  const handleDeleteMember = async () => {
+    if (!window.confirm('정말 이 멤버를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await teamMemberAPI.delete(currentMember.id);
+
+      // 팀 데이터 새로고침
+      const updatedTeamData = await teamMemberAPI.getAll();
+      setTeamData(updatedTeamData);
+
+      handleCloseModal();
+      alert('멤버가 삭제되었습니다.');
+    } catch (error) {
+      console.error('멤버 삭제 실패:', error);
+      alert('멤버 삭제에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
@@ -581,14 +605,24 @@ export default function App() {
               <h2 className="text-lg font-semibold text-white">팀 멤버 정보</h2>
               <div className="flex items-center gap-2">
                 {!isEditingMember ? (
-                  <button
-                    onClick={handleStartEdit}
-                    className="flex items-center justify-center gap-2 h-10 px-5 !bg-[#8b5cf6] hover:!bg-violet-500 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-lg shadow-violet-500/30 active:scale-95"
-                  >
-                    <Edit3 size={18} />
-                    <span className="hidden sm:inline">편집</span>
-                    <span className="inline sm:hidden">편집</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={handleDeleteMember}
+                      className="flex items-center justify-center gap-2 h-10 px-5 !bg-red-500 hover:!bg-red-600 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-lg shadow-red-500/30 active:scale-95 mr-2"
+                    >
+                      <Trash2 size={18} />
+                      <span className="hidden sm:inline">삭제</span>
+                      <span className="inline sm:hidden">삭제</span>
+                    </button>
+                    <button
+                      onClick={handleStartEdit}
+                      className="flex items-center justify-center gap-2 h-10 px-5 !bg-[#8b5cf6] hover:!bg-violet-500 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-lg shadow-violet-500/30 active:scale-95"
+                    >
+                      <Edit3 size={18} />
+                      <span className="hidden sm:inline">편집</span>
+                      <span className="inline sm:hidden">편집</span>
+                    </button>
+                  </>
                 ) : (
                   <div className="flex gap-2">
                     <button

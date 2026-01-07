@@ -1,5 +1,21 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle, Grid, Hexagon, Rocket, BarChart3, Smartphone, Globe2, Trash2, LogOut } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import LoginPage from './LoginPage';
 import { getTeamConfig } from './utils/configLoader';
 import { teamMemberAPI, boardAPI, statsAPI } from './services/api';
@@ -16,6 +32,7 @@ const TEAM_ICONS = {
   "mobile-dx": Smartphone,
   "global-dx": Globe2,
 };
+
 
 // --- 컴포넌트: 육각형 레이더 차트 (SVG) ---
 const HexChart = ({ stats, labels, color = "#8b5cf6" }) => {
@@ -75,6 +92,88 @@ const HexChart = ({ stats, labels, color = "#8b5cf6" }) => {
         })}
         {labelElements}
       </svg>
+    </div>
+  );
+};
+
+// --- 컴포넌트: 정렬 가능한 카드 (Sortable Card) ---
+const SortableMemberCard = ({ member, memberTeam, onClick }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: member.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={() => {
+        // 드래그가 아닐 때만 클릭 이벤트 발생
+        if (!isDragging) {
+          onClick(member);
+        }
+      }}
+      className="group relative bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 hover:border-purple-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 cursor-grab active:cursor-grabbing overflow-hidden backdrop-blur-sm"
+    >
+      {/* 카드 호버시 배경 효과 */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+      <div className="relative z-10 flex flex-col items-center">
+        <div className="relative mb-4">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 p-[2px]">
+            <div className="w-full h-full rounded-full bg-slate-900 overflow-hidden">
+              <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+            </div>
+          </div>
+          <div className="absolute -bottom-2 -right-2 bg-slate-700 text-xs px-2 py-1 rounded-full border border-slate-600 font-mono text-purple-300">
+            {member.mbti}
+          </div>
+        </div>
+
+        <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
+        <p className="text-sm text-slate-400 font-medium mb-2">{member.role}</p>
+
+        {/* 팀 정보 표시 */}
+        {memberTeam && (
+          <div
+            className="px-2 py-1 rounded-md text-xs font-medium mb-3"
+            style={{
+              backgroundColor: `${memberTeam.color}20`,
+              color: memberTeam.color,
+              border: `1px solid ${memberTeam.color}30`
+            }}
+          >
+            {memberTeam.name}
+          </div>
+        )}
+
+        <div className="w-full h-[1px] bg-white/10 my-3" />
+
+        <p className="text-sm text-slate-300 text-center line-clamp-2 min-h-[2.5rem]">
+          "{member.description}"
+        </p>
+
+        <div className="mt-4 flex gap-2 flex-wrap justify-center">
+          {member.tags && member.tags.split(',').map((tag, i) => (
+            <span key={i} className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-md">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
@@ -314,6 +413,40 @@ export default function App() {
     }
   };
 
+  // --- 드래그 앤 드롭 핸들러 ---
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px 움직여야 드래그 시작 (클릭과 구분)
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      // 1. UI 즉시 업데이트 (Optimistic UI)
+      setTeamData((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+
+        // 2. 서버에 순서 저장 (비동기)
+        teamMemberAPI.updateOrder(newOrder).catch(err => {
+          console.error('순서 저장 실패:', err);
+          // 에러 발생시 롤백하거나 사용자에게 알림? 
+          // 여기선 간단히 로그만 출력
+        });
+
+        return newOrder;
+      });
+    }
+  };
+
   if (!isLoggedIn) {
     return <LoginPage onLogin={handleLogin} />;
   }
@@ -524,63 +657,31 @@ export default function App() {
             </div>
 
             {/* 팀 그리드 (Bento Grid Style) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredMembers.map((member) => {
-                const memberTeam = teamConfig.teams.find(team => team.id === member.team);
-                return (
-                  <div
-                    key={member.id}
-                    onClick={() => handleOpenModal(member)}
-                    className="group relative bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 hover:border-purple-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden backdrop-blur-sm"
-                  >
-                    {/* 카드 호버시 배경 효과 */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                    <div className="relative z-10 flex flex-col items-center">
-                      <div className="relative mb-4">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 p-[2px]">
-                          <div className="w-full h-full rounded-full bg-slate-900 overflow-hidden">
-                            <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
-                          </div>
-                        </div>
-                        <div className="absolute -bottom-2 -right-2 bg-slate-700 text-xs px-2 py-1 rounded-full border border-slate-600 font-mono text-purple-300">
-                          {member.mbti}
-                        </div>
-                      </div>
-
-                      <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
-                      <p className="text-sm text-slate-400 font-medium mb-2">{member.role}</p>
-
-                      {/* 팀 정보 표시 */}
-                      {memberTeam && (
-                        <div
-                          className="px-2 py-1 rounded-md text-xs font-medium mb-3"
-                          style={{
-                            backgroundColor: `${memberTeam.color}20`,
-                            color: memberTeam.color,
-                            border: `1px solid ${memberTeam.color}30`
-                          }}
-                        >
-                          {memberTeam.name}
-                        </div>
-                      )}
-
-                      <div className="w-full h-[1px] bg-white/10 my-3" />
-
-                      <p className="text-sm text-slate-300 text-center line-clamp-2 min-h-[2.5rem]">
-                        "{member.description}"
-                      </p>
-
-                      <div className="mt-4 flex gap-2 flex-wrap justify-center">
-                        <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-md">
-                          {member.tags}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* 팀 그리드 (Bento Grid Style) - Drag and Drop 적용 */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <SortableContext
+                  items={filteredMembers.map(m => m.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  {filteredMembers.map((member) => {
+                    const memberTeam = teamConfig.teams.find(team => team.id === member.team);
+                    return (
+                      <SortableMemberCard
+                        key={member.id}
+                        member={member}
+                        memberTeam={memberTeam}
+                        onClick={handleOpenModal}
+                      />
+                    );
+                  })}
+                </SortableContext>
+              </div>
+            </DndContext>
 
             {filteredMembers.length === 0 && (
               <div className="text-center py-20">
@@ -708,22 +809,26 @@ export default function App() {
               <div className="flex items-center gap-2">
                 {!isEditingMember ? (
                   <>
-                    <button
-                      onClick={handleDeleteMember}
-                      className="flex items-center justify-center gap-2 h-10 px-5 !bg-red-500 hover:!bg-red-600 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-lg shadow-red-500/30 active:scale-95 mr-2"
-                    >
-                      <Trash2 size={18} />
-                      <span className="hidden sm:inline">삭제</span>
-                      <span className="inline sm:hidden">삭제</span>
-                    </button>
-                    <button
-                      onClick={handleStartEdit}
-                      className="flex items-center justify-center gap-2 h-10 px-5 !bg-[#8b5cf6] hover:!bg-violet-500 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-lg shadow-violet-500/30 active:scale-95"
-                    >
-                      <Edit3 size={18} />
-                      <span className="hidden sm:inline">편집</span>
-                      <span className="inline sm:hidden">편집</span>
-                    </button>
+                    {currentUser?.name === currentMember?.name && (
+                      <>
+                        <button
+                          onClick={handleDeleteMember}
+                          className="flex items-center justify-center gap-2 h-10 px-5 !bg-red-500 hover:!bg-red-600 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-lg shadow-red-500/30 active:scale-95 mr-2"
+                        >
+                          <Trash2 size={18} />
+                          <span className="hidden sm:inline">삭제</span>
+                          <span className="inline sm:hidden">삭제</span>
+                        </button>
+                        <button
+                          onClick={handleStartEdit}
+                          className="flex items-center justify-center gap-2 h-10 px-5 !bg-[#8b5cf6] hover:!bg-violet-500 !text-white rounded-full text-sm font-bold transition-all duration-300 shadow-lg shadow-violet-500/30 active:scale-95"
+                        >
+                          <Edit3 size={18} />
+                          <span className="hidden sm:inline">편집</span>
+                          <span className="inline sm:hidden">편집</span>
+                        </button>
+                      </>
+                    )}
                   </>
                 ) : (
                   <div className="flex gap-2">

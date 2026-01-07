@@ -81,6 +81,7 @@ export const teamMemberAPI = {
       const result = await sql`
         SELECT 
           tm.id,
+          tm.emp_id,
           tm.name,
           tm.role,
           tm.team_id as team,
@@ -95,8 +96,8 @@ export const teamMemberAPI = {
         FROM team_members tm
         LEFT JOIN member_stats ms ON tm.id = ms.member_id
         LEFT JOIN stat_categories sc ON ms.stat_category_id = sc.id
-        GROUP BY tm.id, tm.name, tm.role, tm.team_id, tm.mbti, tm.image_url, tm.description, tm.tags
-        ORDER BY tm.id
+        GROUP BY tm.id, tm.name, tm.role, tm.team_id, tm.mbti, tm.image_url, tm.description, tm.tags, tm.emp_id
+        ORDER BY COALESCE(tm.display_order, tm.id) ASC
       `;
       console.log(`✅ 데이터베이스에서 ${result.length}명의 팀 멤버 조회 성공`);
       return result;
@@ -145,6 +146,7 @@ export const teamMemberAPI = {
       const result = await sql`
         SELECT 
           tm.id,
+          tm.emp_id,
           tm.name,
           tm.role,
           tm.team_id as team,
@@ -160,7 +162,7 @@ export const teamMemberAPI = {
         LEFT JOIN member_stats ms ON tm.id = ms.member_id
         LEFT JOIN stat_categories sc ON ms.stat_category_id = sc.id
         WHERE tm.id = ${id}
-        GROUP BY tm.id, tm.name, tm.role, tm.team_id, tm.mbti, tm.image_url, tm.description, tm.tags
+        GROUP BY tm.id, tm.name, tm.role, tm.team_id, tm.mbti, tm.image_url, tm.description, tm.tags, tm.emp_id
       `;
       return result[0];
     } catch (error) {
@@ -251,6 +253,39 @@ export const teamMemberAPI = {
       return true;
     } catch (error) {
       console.error('팀 멤버 삭제 실패:', error);
+      throw error;
+    }
+  },
+
+  // 순서 업데이트
+  async updateOrder(items) {
+    if (!sql) {
+      console.warn('데이터베이스 연결 없음, 순서 업데이트 불가');
+      return;
+    }
+
+    try {
+      // 트랜잭션 처럼 동작하도록 Promise.all 사용 (단, 중간 실패시 롤백은 안됨)
+      // Neon은 다중 쿼리 트랜잭션을 지원하지만, 간단하게 개별 업데이트로 처리
+      // 성능을 위해 pg의 unnest 같은 기능을 쓰면 좋지만, 여기선 단순하게 반복문 사용
+      // 또는 CASE WHEN 구문으로 한 번에 업데이트 가능
+
+      // CASE WHEN 구문 생성
+      // UPDATE team_members SET display_order = CASE id WHEN 1 THEN 10 WHEN 2 THEN 20 ... END WHERE id IN (1, 2, ...)
+
+      const ids = items.map(item => item.id);
+
+      // 반복문으로 처리 (간단하고 안전함)
+      // 실제로는 대량 데이터일 경우 비효율적이나 팀 멤버 수가 적으므로 무방
+      const queries = items.map((item, index) => {
+        return sql`UPDATE team_members SET display_order = ${index} WHERE id = ${item.id}`;
+      });
+
+      await Promise.all(queries);
+
+      return true;
+    } catch (error) {
+      console.error('순서 업데이트 실패:', error);
       throw error;
     }
   }
@@ -498,6 +533,7 @@ export const teamAPI = {
       const result = await sql`
         SELECT 
           tm.id,
+          tm.emp_id,
           tm.name,
           tm.role,
           tm.team_id as team,
@@ -513,8 +549,8 @@ export const teamAPI = {
         LEFT JOIN member_stats ms ON tm.id = ms.member_id
         LEFT JOIN stat_categories sc ON ms.stat_category_id = sc.id
         WHERE tm.team_id = ${teamId}
-        GROUP BY tm.id, tm.name, tm.role, tm.team_id, tm.mbti, tm.image_url, tm.description, tm.tags
-        ORDER BY tm.id
+        GROUP BY tm.id, tm.name, tm.role, tm.team_id, tm.mbti, tm.image_url, tm.description, tm.tags, tm.emp_id
+        ORDER BY COALESCE(tm.display_order, tm.id) ASC
       `;
       return result;
     } catch (error) {

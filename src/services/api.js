@@ -181,8 +181,8 @@ export const teamMemberAPI = {
     try {
       // 팀 멤버 추가
       const memberResult = await sql`
-        INSERT INTO team_members (name, role, team_id, mbti, image_url, description, tags)
-        VALUES (${memberData.name}, ${memberData.role}, ${memberData.team || null}, ${memberData.mbti}, ${memberData.image}, ${memberData.description}, ${memberData.tags})
+        INSERT INTO team_members (name, role, team_id, mbti, image_url, description, tags, emp_id, password)
+        VALUES (${memberData.name}, ${memberData.role}, ${memberData.team || null}, ${memberData.mbti}, ${memberData.image}, ${memberData.description}, ${memberData.tags}, ${memberData.emp_id || null}, ${memberData.password || '0000'})
         RETURNING id
       `;
 
@@ -218,7 +218,7 @@ export const teamMemberAPI = {
         UPDATE team_members 
         SET name = ${memberData.name}, role = ${memberData.role}, team_id = ${memberData.team || null}, 
             mbti = ${memberData.mbti}, image_url = ${memberData.image}, description = ${memberData.description}, 
-            tags = ${memberData.tags}, updated_at = CURRENT_TIMESTAMP
+            tags = ${memberData.tags}, emp_id = ${memberData.emp_id || null}, password = ${memberData.password}, updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
       `;
 

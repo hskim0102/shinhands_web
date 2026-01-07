@@ -897,6 +897,26 @@ export default function App() {
                             className="w-full bg-blue-500/10 border border-blue-500/30 rounded-full px-4 py-2 text-blue-300 text-center text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
+                        <div>
+                          <label className="block text-xs text-slate-400 mb-1">사번</label>
+                          <input
+                            type="text"
+                            value={editingMemberData.emp_id || ''}
+                            onChange={(e) => handleFieldChange('emp_id', e.target.value)}
+                            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-center text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="사번 입력"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-slate-400 mb-1">비밀번호</label>
+                          <input
+                            type="text"
+                            value={editingMemberData.password || ''}
+                            onChange={(e) => handleFieldChange('password', e.target.value)}
+                            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-center text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="비밀번호 변경"
+                          />
+                        </div>
                       </div>
                     ) : (
                       <>
@@ -1096,6 +1116,9 @@ export default function App() {
 
                 <div className="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-slate-500">
                   <span className="font-mono">ID: {currentMember.id.toString().padStart(3, '0')}</span>
+                  {currentMember.emp_id && (
+                    <span className="font-mono text-slate-400">사번: {currentMember.emp_id}</span>
+                  )}
                   <span className="flex items-center gap-1">
                     Team Awesome <Sparkles size={12} className="text-yellow-500" />
                   </span>
@@ -1287,6 +1310,9 @@ export default function App() {
                   image: formData.get('image') || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.get('name')}&backgroundColor=b6e3f4`,
                   description: formData.get('description'),
                   tags: formData.get('tags'),
+                  tags: formData.get('tags'),
+                  emp_id: formData.get('emp_id'),
+                  password: formData.get('password'),
                   stats: stats
                 });
               }} className="space-y-4">
@@ -1311,6 +1337,30 @@ export default function App() {
                       required
                       className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
                       placeholder="예: 프로(수석), 팀장, PM 등"
+                    />
+                  </div>
+                </div>
+
+
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">사번</label>
+                    <input
+                      name="emp_id"
+                      type="text"
+                      className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                      placeholder="사번을 입력하세요 (선택)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">비밀번호</label>
+                    <input
+                      name="password"
+                      type="text"
+                      className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                      placeholder="비밀번호를 입력하세요 (기본값: 0000)"
                     />
                   </div>
                 </div>
@@ -1466,8 +1516,9 @@ export default function App() {
               </form>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        </div >
+      )
+      }
+    </div >
   );
 }

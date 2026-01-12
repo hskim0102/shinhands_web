@@ -587,11 +587,15 @@ export const kpiAPI = {
     try {
       const result = await sql`
         INSERT INTO kpis (
-          category, initiative, weight, indicator_item, indicator_weight, unit, target_2025, remarks
+          category, initiative, weight, indicator_item, indicator_weight, unit, target_2025, remarks,
+          target_s, target_a, target_b_plus, target_b, target_b_minus, target_c, target_d, current_achievement
         ) VALUES (
           ${kpiData.category}, ${kpiData.initiative}, ${kpiData.weight}, 
           ${kpiData.indicator_item}, ${kpiData.indicator_weight}, ${kpiData.unit}, 
-          ${kpiData.target_2025}, ${kpiData.remarks}
+          ${kpiData.target_2025}, ${kpiData.remarks},
+          ${kpiData.target_s || ''}, ${kpiData.target_a || ''}, ${kpiData.target_b_plus || ''}, 
+          ${kpiData.target_b || ''}, ${kpiData.target_b_minus || ''}, ${kpiData.target_c || ''}, ${kpiData.target_d || ''},
+          ${kpiData.current_achievement || ''}
         )
         RETURNING *
       `;
@@ -617,6 +621,14 @@ export const kpiAPI = {
           unit = ${kpiData.unit},
           target_2025 = ${kpiData.target_2025},
           remarks = ${kpiData.remarks},
+          target_s = ${kpiData.target_s || ''},
+          target_a = ${kpiData.target_a || ''},
+          target_b_plus = ${kpiData.target_b_plus || ''},
+          target_b = ${kpiData.target_b || ''},
+          target_b_minus = ${kpiData.target_b_minus || ''},
+          target_c = ${kpiData.target_c || ''},
+          target_d = ${kpiData.target_d || ''},
+          current_achievement = ${kpiData.current_achievement || ''},
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
         RETURNING *

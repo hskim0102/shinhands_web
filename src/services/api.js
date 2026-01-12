@@ -559,3 +559,85 @@ export const teamAPI = {
     }
   }
 };
+
+// KPI API
+export const kpiAPI = {
+  // 모든 KPI 조회
+  async getAll() {
+    if (!sql) {
+      console.warn('데이터베이스 연결 없음, 빈 배열 반환');
+      return [];
+    }
+
+    try {
+      const result = await sql`
+        SELECT * FROM kpis ORDER BY id ASC
+      `;
+      return result;
+    } catch (error) {
+      console.error('KPI 조회 실패:', error);
+      return [];
+    }
+  },
+
+  // KPI 생성
+  async create(kpiData) {
+    if (!sql) throw new Error('데이터베이스 연결 필요');
+
+    try {
+      const result = await sql`
+        INSERT INTO kpis (
+          category, initiative, weight, indicator_item, indicator_weight, unit, target_2025, remarks
+        ) VALUES (
+          ${kpiData.category}, ${kpiData.initiative}, ${kpiData.weight}, 
+          ${kpiData.indicator_item}, ${kpiData.indicator_weight}, ${kpiData.unit}, 
+          ${kpiData.target_2025}, ${kpiData.remarks}
+        )
+        RETURNING *
+      `;
+      return result[0];
+    } catch (error) {
+      console.error('KPI 생성 실패:', error);
+      throw error;
+    }
+  },
+
+  // KPI 수정
+  async update(id, kpiData) {
+    if (!sql) throw new Error('데이터베이스 연결 필요');
+
+    try {
+      const result = await sql`
+        UPDATE kpis SET
+          category = ${kpiData.category},
+          initiative = ${kpiData.initiative},
+          weight = ${kpiData.weight},
+          indicator_item = ${kpiData.indicator_item},
+          indicator_weight = ${kpiData.indicator_weight},
+          unit = ${kpiData.unit},
+          target_2025 = ${kpiData.target_2025},
+          remarks = ${kpiData.remarks},
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${id}
+        RETURNING *
+      `;
+      return result[0];
+    } catch (error) {
+      console.error('KPI 수정 실패:', error);
+      throw error;
+    }
+  },
+
+  // KPI 삭제
+  async delete(id) {
+    if (!sql) throw new Error('데이터베이스 연결 필요');
+
+    try {
+      await sql`DELETE FROM kpis WHERE id = ${id}`;
+      return true;
+    } catch (error) {
+      console.error('KPI 삭제 실패:', error);
+      throw error;
+    }
+  }
+};

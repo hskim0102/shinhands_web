@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle, Grid, Hexagon, Rocket, BarChart3, Smartphone, Globe2, Trash2, LogOut } from 'lucide-react';
+import { Search, X, Zap, MessageCircle, Brain, Sparkles, Hash, Menu, Users, FileText, Plus, Calendar, User, Edit3, Save, XCircle, Grid, Hexagon, Rocket, BarChart3, Smartphone, Globe2, Trash2, LogOut, Target } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import LoginPage from './LoginPage';
+import KPIPage from './KPIPage';
 import { getTeamConfig } from './utils/configLoader';
 import { teamMemberAPI, boardAPI, statsAPI } from './services/api';
 
@@ -576,6 +577,25 @@ export default function App() {
               </button>
 
               <button
+                onClick={() => setCurrentView("kpi")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${currentView === "kpi"
+                  ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
+                  : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+                  }`}
+
+                style={{
+                  backgroundColor: 'transparent',
+                  borderColor: 'transparent'
+                }}
+
+              >
+                <div className="flex items-center gap-2">
+                  <BarChart3 size={18} />
+                  <span className="tracking-wide hidden sm:inline">KPI</span>
+                </div>
+              </button>
+
+              <button
                 onClick={() => setShowNewMemberForm(true)}
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 text-slate-300 hover:text-white hover:bg-slate-700/50"
 
@@ -689,7 +709,7 @@ export default function App() {
               </div>
             )}
           </>
-        ) : (
+        ) : currentView === "board" ? (
           <>
             {/* 게시판 헤더 */}
             <div className="flex justify-between items-center mb-8">
@@ -741,6 +761,8 @@ export default function App() {
               </div>
             )}
           </>
+        ) : (
+          <KPIPage />
         )}
       </main>
 
@@ -789,6 +811,20 @@ export default function App() {
           >
             <FileText size={22} className={currentView === "board" ? "fill-current opacity-20" : ""} />
             <span className="text-[10px] font-medium mt-1">게시판</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView("kpi")}
+            className={`flex flex-col items-center justify-center w-full h-full transition-all duration-300 ${currentView === "kpi" ? "text-purple-400" : "text-slate-400 hover:text-slate-200"}`}
+
+            style={{
+              backgroundColor: 'transparent',
+              borderColor: 'transparent'
+            }}
+
+          >
+            <BarChart3 size={22} className={currentView === "kpi" ? "fill-current opacity-20" : ""} />
+            <span className="text-[10px] font-medium mt-1">KPI</span>
           </button>
         </div>
       </nav>

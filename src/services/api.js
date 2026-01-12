@@ -218,7 +218,7 @@ export const teamMemberAPI = {
         UPDATE team_members 
         SET name = ${memberData.name}, role = ${memberData.role}, team_id = ${memberData.team || null}, 
             mbti = ${memberData.mbti}, image_url = ${memberData.image}, description = ${memberData.description}, 
-            tags = ${memberData.tags}, emp_id = ${memberData.emp_id || null}, password = ${memberData.password}, updated_at = CURRENT_TIMESTAMP
+            tags = ${memberData.tags}, emp_id = ${memberData.emp_id || null}, password = COALESCE(NULLIF(${memberData.password}, ''), password), updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
       `;
 

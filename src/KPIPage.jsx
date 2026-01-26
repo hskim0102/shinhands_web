@@ -73,6 +73,7 @@ const KPIPage = () => {
             remarks: ''
         });
         setShowModal(true);
+
     };
 
     // 모달 열기 (수정)

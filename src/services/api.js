@@ -64,6 +64,23 @@ const fallbackPosts = [
   }
 ];
 
+const fallbackComments = [
+  {
+    id: 1,
+    post_id: 1,
+    author_name: "김윤성",
+    content: "모두 화이팅입니다!",
+    created_at: "2024-12-26 10:00:00"
+  },
+  {
+    id: 2,
+    post_id: 1,
+    author_name: "이수민",
+    content: "기대되네요 ^^",
+    created_at: "2024-12-26 10:05:00"
+  }
+];
+
 // 팀 멤버 API
 export const teamMemberAPI = {
   // 모든 팀 멤버 조회
@@ -450,6 +467,55 @@ export const boardAPI = {
         { name: 'event', display_name: '이벤트' },
         { name: 'free', display_name: '자유' }
       ];
+    }
+  },
+
+  // 댓글 조회
+  async getComments(postId) {
+    if (!sql) {
+      return fallbackComments.filter(c => c.post_id === postId);
+    }
+
+    try {
+      const result = await sql`
+        SELECT id, post_id, author_name, content, created_at::text
+        FROM comments
+        WHERE post_id = ${postId}
+        ORDER BY created_at ASC
+      `;
+      return result;
+    } catch (error) {
+      console.error('댓글 조회 실패:', error);
+      // 테이블이 없을 수도 있으므로 조용히 실패하거나 폴백 반환
+      return fallbackComments.filter(c => c.post_id === postId);
+    }
+  },
+
+  // 댓글 추가
+  async addComment(commentData) {
+    if (!sql) {
+      // 폴백 모드에서는 메모리에 추가 (새로고침하면 사라짐)
+      const newComment = {
+        id: Date.now(),
+        post_id: commentData.postId,
+        author_name: commentData.authorName,
+        content: commentData.content,
+        created_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+      };
+      fallbackComments.push(newComment);
+      return newComment;
+    }
+
+    try {
+      const result = await sql`
+        INSERT INTO comments (post_id, author_name, content)
+        VALUES (${commentData.postId}, ${commentData.authorName}, ${commentData.content})
+        RETURNING id, post_id, author_name, content, created_at::text
+      `;
+      return result[0];
+    } catch (error) {
+      console.error('댓글 작성 실패:', error);
+      throw error;
     }
   }
 };

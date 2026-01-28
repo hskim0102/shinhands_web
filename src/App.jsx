@@ -18,6 +18,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import LoginPage from './LoginPage';
 import KPIPage from './KPIPage';
+import CommentSection from './CommentSection'; // 댓글 컴포넌트 추가
 import { getTeamConfig } from './utils/configLoader';
 import { teamMemberAPI, boardAPI, statsAPI } from './services/api';
 
@@ -1202,6 +1203,9 @@ export default function App() {
               <div className="prose prose-invert max-w-none">
                 <p className="text-slate-300 leading-relaxed whitespace-pre-wrap">{selectedPost.content}</p>
               </div>
+
+              {/* 댓글 섹션 추가 */}
+              <CommentSection postId={selectedPost.id} currentUser={currentUser} />
             </div>
           </div>
         </div>

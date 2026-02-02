@@ -11,8 +11,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "node server/index.js",
-    "dev:all": "concurrently \"npm run server\" \"npm run dev\""
+    "server": "node api/index.js",
+    "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
+    "start": "node api/index.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

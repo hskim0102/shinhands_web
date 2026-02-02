@@ -11,8 +11,15 @@ export default defineConfig({
     }),
   ],
   define: {
-    // 환경 변수를 명시적으로 정의
-    'import.meta.env.VITE_DATABASE_URL': JSON.stringify(process.env.VITE_DATABASE_URL),
+    // 환경 변수를 명시적으로 정의 (DB URL 제거)
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
   // 또는 envPrefix를 사용하여 VITE_ 접두사가 있는 모든 환경 변수를 노출
   envPrefix: 'VITE_',

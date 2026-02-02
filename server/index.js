@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { neon } from '@neondatabase/serverless';
 import 'dotenv/config';
+import { fileURLToPath } from 'url';
 
 const app = express();
 const PORT = 3001;
@@ -501,6 +502,12 @@ app.delete('/api/kpis/:id', async (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+// Export for Vercel
+export default app;
+
+// Start server if run directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+}

@@ -506,7 +506,7 @@ export const boardAPI = {
       return newComment;
     }
 
-    try {
+    try {   
       const result = await sql`
         INSERT INTO comments (post_id, author_name, content)
         VALUES (${commentData.postId}, ${commentData.authorName}, ${commentData.content})

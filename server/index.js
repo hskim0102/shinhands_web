@@ -27,6 +27,32 @@ if (databaseUrl) {
 
 // Routes
 
+// Health Check & Debug
+app.get('/api/health', async (req, res) => {
+    const dbStatus = {
+        env_var_set: !!process.env.DATABASE_URL,
+        db_connected: false,
+        version: null,
+        error: null
+    };
+
+    if (sql) {
+        try {
+            const result = await sql`SELECT version()`;
+            dbStatus.db_connected = true;
+            dbStatus.version = result[0].version;
+        } catch (e) {
+            dbStatus.error = e.message;
+        }
+    }
+
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        database: dbStatus
+    });
+});
+
 // Team Members
 app.get('/api/team-members', async (req, res) => {
     if (!sql) return res.status(503).json({ error: 'Database not connected' });

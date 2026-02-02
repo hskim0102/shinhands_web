@@ -497,8 +497,8 @@ export default function App() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="bg-gradient-to-tr from-purple-500 to-blue-500 p-2 rounded-lg">
-                  <Sparkles size={24} className="text-white" />
+                <div className="w-10 h-10 rounded-lg overflow-hidden">
+                  <img src="/dx-headquarters.png" alt="DX Headquarters" className="w-full h-full object-cover" />
                 </div>
                 <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
                   {teamConfig.teamInfo.name}

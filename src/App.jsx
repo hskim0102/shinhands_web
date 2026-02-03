@@ -597,6 +597,20 @@ export default function App() {
               </button>
 
               <button
+                onClick={() => window.open("https://stock-community.vercel.app/", "_blank")}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 text-slate-300 hover:text-white hover:bg-slate-700/50"
+                style={{
+                  backgroundColor: 'transparent',
+                  borderColor: 'transparent'
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <MessageCircle size={18} />
+                  <span className="tracking-wide hidden sm:inline">주식토론방</span>
+                </div>
+              </button>
+
+              <button
                 onClick={() => setShowNewMemberForm(true)}
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 text-slate-300 hover:text-white hover:bg-slate-700/50"
 
@@ -812,6 +826,18 @@ export default function App() {
           >
             <FileText size={22} className={currentView === "board" ? "fill-current opacity-20" : ""} />
             <span className="text-[10px] font-medium mt-1">게시판</span>
+          </button>
+
+          <button
+            onClick={() => window.open("https://stock-community.vercel.app/", "_blank")}
+            className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-slate-200 transition-all duration-300"
+            style={{
+              backgroundColor: 'transparent',
+              borderColor: 'transparent'
+            }}
+          >
+            <MessageCircle size={22} />
+            <span className="text-[10px] font-medium mt-1">주식토론방</span>
           </button>
 
           <button
